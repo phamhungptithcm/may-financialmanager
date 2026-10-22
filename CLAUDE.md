@@ -157,3 +157,36 @@ Mây Family Finance uses exactly two logical CI/CD pipelines:
 
 Every CI/CD change must follow:
 Implement → Review → Test → Fix → Retest → Verify.
+
+
+## Phase Completion and Readiness Gate
+
+No development phase may be marked COMPLETE
+without implementation and verification evidence.
+
+Before moving to the next phase, Claude must:
+
+1. Reconstruct all requirements from approved specs.
+2. Verify implementation against source code.
+3. Execute all applicable automated tests.
+4. Verify integration and security boundaries.
+5. Review UI against approved design references.
+6. Resolve all actionable critical/high findings.
+7. Validate CI/CD and architecture compliance.
+8. Record verification evidence and outstanding issues.
+9. Produce a formal phase readiness report.
+
+A passing build alone does not establish
+phase completion.
+
+Unexecuted tests are NOT passed tests.
+
+Mocked tests are NOT integration tests.
+
+Documentation-only implementation is NOT complete.
+
+If a mandatory acceptance criterion is unverified,
+the next phase must not start.
+
+The next phase requires a READY readiness decision
+and explicit authorization to proceed.

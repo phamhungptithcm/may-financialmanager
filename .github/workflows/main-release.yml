@@ -20,6 +20,7 @@ name: Main Release
 on:
   push:
     branches: [main]
+  workflow_dispatch: # allow manual trigger for testing
 
 concurrency:
   group: main-release-${{ github.ref }}
@@ -35,6 +36,7 @@ jobs:
   # ===========================================================
   quality-gates:
     name: Quality Gates
+    timeout-minutes: 30
     uses: ./.github/workflows/reusable-quality-gates.yml
 
   # ===========================================================
@@ -42,6 +44,7 @@ jobs:
   # ===========================================================
   build-android:
     name: Build Android Release
+    timeout-minutes: 30
     needs: [quality-gates]
     if: always() && needs.quality-gates.result == 'success'
     runs-on: ubuntu-latest
@@ -127,6 +130,7 @@ jobs:
   # ===========================================================
   build-ios:
     name: Build iOS Release (unsigned)
+    timeout-minutes: 30
     needs: [quality-gates]
     if: always() && needs.quality-gates.result == 'success' && runner.os == 'macOS'
     runs-on: macos-latest
@@ -174,6 +178,7 @@ jobs:
   # ===========================================================
   calculate-version:
     name: Calculate Version
+    timeout-minutes: 15
     needs: [quality-gates, build-android]
     if: |
       always() &&
@@ -249,6 +254,7 @@ jobs:
   # ===========================================================
   generate-notes:
     name: Generate Release Notes
+    timeout-minutes: 10
     needs: [calculate-version]
     if: always() && steps.calc.outputs.skip != 'true' && steps.calc.outputs.version != ''
     runs-on: ubuntu-latest
@@ -304,6 +310,7 @@ jobs:
   # ===========================================================
   create-release:
     name: Create GitHub Release
+    timeout-minutes: 20
     needs: [calculate-version, generate-notes]
     if: |
       always() &&
@@ -420,6 +427,7 @@ jobs:
   # ===========================================================
   release-failure-check:
     name: Release Safety Check
+    timeout-minutes: 5
     needs: [quality-gates, build-android]
     if: always() && (needs.quality-gates.result != 'success' || needs.build-android.result != 'success')
     runs-on: ubuntu-latest

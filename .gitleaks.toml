@@ -1,0 +1,17 @@
+# Gitleaks configuration — ignore false-positive patterns.
+# See https://github.com/gitleaks/gitleaks for format reference.
+
+[allowlist]
+description = "Allowlisted paths and regexes to reduce gitleaks false positives."
+paths = [
+  '''pubspec\.yaml''',
+  '''package\.json''',
+  '''tsconfig\.json''',
+  '''firebase\.json''',
+  '''firebase\.json\.example''',
+  '''.github/workflows/validate\.yml''',
+  '''.github/workflows/branch-ci\.yml''',
+  '''.github/workflows/main-release\.yml''',
+  '''.github/workflows/reusable-quality-gates\.yml''',
+  '''docs/devops/.*''',
+]

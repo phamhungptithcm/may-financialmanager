@@ -20,6 +20,7 @@ on:
       - main
   pull_request:
     branches: [main]
+  workflow_dispatch: # allow manual trigger for testing
 
 concurrency:
   group: branch-ci-${{ github.head_ref || github.run_id }}
@@ -50,13 +51,14 @@ jobs:
     outputs:
       apk-valid: ${{ steps.verify.outputs.apk }}
       aab-valid: ${{ steps.verify.outputs.aab }}
+    timeout-minutes: 30
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0  # needed for version calculation
 
-      - name: Setup Java 17
+      - name: Setup Java 17 (for Flutter)
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
@@ -72,7 +74,24 @@ jobs:
 
       - name: Install dependencies
         working-directory: apps/mobile
-        run: flutter pub get
+        run: |
+          flutter pub get || {
+            echo "::error::flutter pub get failed (likely network timeout). Retrying..."
+            sleep 10
+            flutter pub get
+          }
+
+      - name: Format check (line-length 120)
+        working-directory: apps/mobile
+        run: dart format --set-exit-code lib/ --line-length 120
+
+      - name: Static analysis
+        working-directory: apps/mobile
+        run: flutter analyze --no-fatal-infos
+
+      - name: Run unit tests (with coverage)
+        working-directory: apps/mobile
+        run: flutter test --coverage --concurrency=4
 
       - name: Build Android APK
         working-directory: apps/mobile
@@ -128,6 +147,7 @@ jobs:
 
       # Job summary for Branch CI.
       - name: Publish job summary
+        if: always()
         run: |
           echo "**Branch CI — Job Summary**" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
@@ -138,8 +158,8 @@ jobs:
           echo "| Job | Status |" >> "$GITHUB_STEP_SUMMARY"
           echo "|-----|--------|" >> "$GITHUB_STEP_SUMMARY"
           echo "| Quality Gates | ${{ needs.quality-gates.result == 'success' && '✅ Pass' || '❌ Fail' }} |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Android APK | ${{ steps.verify.outputs.apk == 'true' && '✅ Valid' || '⊘ Skipped' }} |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Android AAB | ${{ steps.verify.outputs.aab == 'true' && '✅ Valid' || '⊘ Skipped' }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Android APK | ${{ steps.verify.outputs.apk == 'true' && '✅ Valid' || (needs.build-android.result == 'skipped' && '⊘ Skipped' || '❌ Failed') }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Android AAB | ${{ steps.verify.outputs.aab == 'true' && '✅ Valid' || (needs.build-android.result == 'skipped' && '⊘ Skipped' || '❌ Failed') }} |" >> "$GITHUB_STEP_SUMMARY"
 
   # ===========================================================
   # iOS Build — unsigned artifact (macOS only)
@@ -149,6 +169,7 @@ jobs:
     needs: [quality-gates]
     if: always() && needs.quality-gates.result == 'success' && runner.os == 'macOS'
     runs-on: macos-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
