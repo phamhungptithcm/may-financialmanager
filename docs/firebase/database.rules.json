@@ -1,0 +1,228 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid"
+      }
+    },
+    "userHouseholds": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid"
+      }
+    },
+    "households": {
+      "$hid": {
+        ".read": "auth != null && root.child('members').child($hid).child(auth.uid).child('status').val() === 'ACTIVE'"
+      }
+    },
+    "members": {
+      "$hid": {
+        ".read": "auth != null && root.child('members').child($hid).child(auth.uid).child('status').val() === 'ACTIVE'"
+      }
+    },
+    "accounts": {
+      "$hid": {
+        ".read": "auth != null && root.child('members').child($hid).child(auth.uid).child('status').val() === 'ACTIVE'"
+      }
+    },
+    "categories": {
+      "$hid": {
+        ".read": "auth != null && root.child('members').child($hid).child(auth.uid).child('status').val() === 'ACTIVE'"
+      }
+    },
+    "budgets": {
+      "$hid": {
+        ".read": "auth != null && root.child('members').child($hid).child(auth.uid).child('status').val() === 'ACTIVE'"
+      }
+    },
+    "budgetStatus": {
+      "$hid": {
+        ".read": "auth != null && root.child('members').child($hid).child(auth.uid).child('status').val() === 'ACTIVE'"
+      }
+    },
+    "assets": {
+      "$hid": {
+        ".read": "auth != null && root.child('members').child($hid).child(auth.uid).child('status').val() === 'ACTIVE'"
+      }
+    },
+    "assetValuations": {
+      "$hid": {
+        ".read": "auth != null && root.child('members').child($hid).child(auth.uid).child('status').val() === 'ACTIVE'"
+      }
+    },
+    "liabilities": {
+      "$hid": {
+        ".read": "auth != null && root.child('members').child($hid).child(auth.uid).child('status').val() === 'ACTIVE'"
+      }
+    },
+    "investmentHoldings": {
+      "$hid": {
+        ".read": "auth != null && root.child('members').child($hid).child(auth.uid).child('status').val() === 'ACTIVE'"
+      }
+    },
+    "investmentCashflows": {
+      "$hid": {
+        ".read": "auth != null && root.child('members').child($hid).child(auth.uid).child('status').val() === 'ACTIVE'"
+      }
+    },
+    "goals": {
+      "$hid": {
+        ".read": "auth != null && root.child('members').child($hid).child(auth.uid).child('status').val() === 'ACTIVE'"
+      }
+    },
+    "netWorthSnapshots": {
+      "$hid": {
+        ".read": "auth != null && root.child('members').child($hid).child(auth.uid).child('status').val() === 'ACTIVE'"
+      }
+    },
+    "growthInsights": {
+      "$hid": {
+        ".read": "auth != null && root.child('members').child($hid).child(auth.uid).child('status').val() === 'ACTIVE'"
+      }
+    },
+    "balanceSnapshots": {
+      "$hid": {
+        ".read": "auth != null && root.child('members').child($hid).child(auth.uid).child('status').val() === 'ACTIVE'"
+      }
+    },
+    "summaries": {
+      "$hid": {
+        ".read": "auth != null && root.child('members').child($hid).child(auth.uid).child('status').val() === 'ACTIVE'"
+      }
+    },
+    "receiptJobs": {
+      "$hid": {
+        ".read": "auth != null && root.child('members').child($hid).child(auth.uid).child('status').val() === 'ACTIVE'"
+      }
+    },
+    "receiptDrafts": {
+      "$hid": {
+        ".read": "auth != null && root.child('members').child($hid).child(auth.uid).child('status').val() === 'ACTIVE'"
+      }
+    },
+    "ledgerEvents": {
+      "$hid": {
+        "$eventId": {
+          ".read": "auth != null && root.child('members').child($hid).child(auth.uid).child('status').val() === 'ACTIVE'"
+        }
+      }
+    },
+    "transactionList": {
+      "$hid": {
+        "$ym": {
+          ".indexOn": [
+            "occurredAtMs"
+          ],
+          ".read": "auth != null && root.child('members').child($hid).child(auth.uid).child('status').val() === 'ACTIVE' && query.orderByChild === 'occurredAtMs' && query.limitToLast != null && query.limitToLast <= 50",
+          "$eventId": {
+            ".read": "auth != null && root.child('members').child($hid).child(auth.uid).child('status').val() === 'ACTIVE'"
+          }
+        }
+      }
+    },
+    "accountMovements": {
+      "$hid": {
+        "$accountId": {
+          "$ym": {
+            ".indexOn": [
+              "occurredAtMs"
+            ],
+            ".read": "auth != null && root.child('members').child($hid).child(auth.uid).child('status').val() === 'ACTIVE' && query.orderByChild === 'occurredAtMs' && query.limitToLast != null && query.limitToLast <= 50",
+            "$eventId": {
+              ".read": "auth != null && root.child('members').child($hid).child(auth.uid).child('status').val() === 'ACTIVE'"
+            }
+          }
+        }
+      }
+    },
+    "notificationInbox": {
+      "$uid": {
+        ".indexOn": [
+          "createdAtMs"
+        ],
+        ".read": "auth != null && auth.uid === $uid && query.orderByChild === 'createdAtMs' && query.limitToLast != null && query.limitToLast <= 50",
+        "$notificationId": {
+          ".read": "auth != null && auth.uid === $uid"
+        }
+      }
+    },
+    "notificationRead": {
+      "$uid": {
+        "$notificationId": {
+          ".read": "auth != null && auth.uid === $uid"
+        }
+      }
+    },
+    "notificationSettings": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid"
+      }
+    },
+    "widgetLayouts": {
+      "$hid": {
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid && root.child('members').child($hid).child($uid).child('status').val() === 'ACTIVE'"
+        }
+      }
+    },
+    "widgetSnapshots": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid"
+      }
+    },
+    "entitlements": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid"
+      }
+    },
+    "exportJobs": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid"
+      }
+    },
+    "deletionJobs": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid"
+      }
+    },
+    "deviceTokens": {
+      ".read": false,
+      ".write": false
+    },
+    "purchaseEvents": {
+      ".read": false,
+      ".write": false
+    },
+    "projectionCheckpoints": {
+      ".read": false,
+      ".write": false
+    },
+    "ledgerOperations": {
+      ".read": false,
+      ".write": false
+    },
+    "idempotency": {
+      ".read": false,
+      ".write": false
+    },
+    "auditLogs": {
+      ".read": false,
+      ".write": false
+    },
+    "invites": {
+      ".read": false,
+      ".write": false
+    },
+    "bills": {
+      "$hid": {
+        ".read": "auth != null && root.child('members').child($hid).child(auth.uid).child('status').val() === 'ACTIVE'"
+      }
+    },
+    "ownershipTransferRequests": {
+      ".read": false,
+      ".write": false
+    }
+  }
+}

@@ -1,0 +1,162 @@
+{
+  "project": "May Family Finance",
+  "version": "2.0",
+  "date": "2026-10-20",
+  "files": [
+    {
+      "path": "ALL_IN_ONE_SPEC.md",
+      "bytes": 210599,
+      "sha256": "c1de1d7e2d0451816e34f9984c0dc6a82cbb901ac78e76bf9ff3381462c2bfd3"
+    },
+    {
+      "path": "README.md",
+      "bytes": 5382,
+      "sha256": "c3f3e021b77c16ccb0893d332b7c7dc41a1d1c7528d9c49fe89485a3f5772efe"
+    },
+    {
+      "path": "contracts/domain-contracts.ts",
+      "bytes": 4945,
+      "sha256": "552f57ca7edda4158218b593725966450e1c183dddc6912b37da1d1d6ae23306"
+    },
+    {
+      "path": "firebase/database.rules.json",
+      "bytes": 6727,
+      "sha256": "583525393edf2016b7dfd287b39d4e3e1146cba88bbe9d1139a46fc31fb50797"
+    },
+    {
+      "path": "firebase/firebase.json.example",
+      "bytes": 490,
+      "sha256": "83b03d2339f41d10dc39d47e8ac977779f4676ca3d55099bf44dc4473f00d669"
+    },
+    {
+      "path": "firebase/storage.rules",
+      "bytes": 624,
+      "sha256": "6209bf7c9c14055eec417bacc99b075c6ada2a33e40bcaca8f7b9f823637a6f2"
+    },
+    {
+      "path": "prompts/MASTER_PROMPT.md",
+      "bytes": 13382,
+      "sha256": "7c15f91373d0a2be10dbfcbc7d1947b95efa0ddc92c13cac2520a3bc38bf554d"
+    },
+    {
+      "path": "prompts/PHASE_PROMPTS.md",
+      "bytes": 6370,
+      "sha256": "fa8ad53d6541885fb16cf8f0bdc75edb87f8b5a376c4ffa1855edd4628766d43"
+    },
+    {
+      "path": "qa/FUNCTIONS_MATRIX.csv",
+      "bytes": 14960,
+      "sha256": "fa7fa73a3abab9d8c0f9f0a989368496a54674c3ed16b70c343dd1ba1dfc9801"
+    },
+    {
+      "path": "qa/INTEGRATION_CHECKLIST.md",
+      "bytes": 1645,
+      "sha256": "d32cd5f23a483ce21c718d235e73fdc73133c4eb18e0cea625e04cc2b630072e"
+    },
+    {
+      "path": "qa/TRACEABILITY.md",
+      "bytes": 2609,
+      "sha256": "d7ba760e57238b324c625e352fc093e203e97f5a783e3a3dd523ef8b831e1634"
+    },
+    {
+      "path": "qa/VERIFICATION.md",
+      "bytes": 1681,
+      "sha256": "78a79a9556e90ffab3368e9f429ef2fc844aa5a572d9d23bccb1502065524a65"
+    },
+    {
+      "path": "reference/architecture_v1.md",
+      "bytes": 17313,
+      "sha256": "206fa68eb5ec78a6a5a16ef8981d38aab4172d67a620eb6d57cf3c05161e1b9f"
+    },
+    {
+      "path": "reference/flutter_components_v1.md",
+      "bytes": 7764,
+      "sha256": "15431ecdba30cfcc5cdb54a095cb04b0cdeb4a84ed65fabb5254feb42013161c"
+    },
+    {
+      "path": "reference/functions_v1.md",
+      "bytes": 6752,
+      "sha256": "4ee67aa26d1923105dd154f1262d78baf40aecf86fdc5e1ce5e81603edaceb15"
+    },
+    {
+      "path": "schemas/ledger-event.schema.json",
+      "bytes": 1717,
+      "sha256": "445b02233ee7a32af1bf9df4670c8ef99fefe1f249635ab6c61c77a3e9ff8b74"
+    },
+    {
+      "path": "schemas/receipt-draft.schema.json",
+      "bytes": 3004,
+      "sha256": "34255af4e6f105d9850e9de58b5a513237dc7cba70c735f57f26c9252308a610"
+    },
+    {
+      "path": "specs/00_DECISIONS_SCOPE.md",
+      "bytes": 5511,
+      "sha256": "c3aa80be3a18d487e6902655e68fc5a9ca25f4dcb091e3e77c08e0d4c049418a"
+    },
+    {
+      "path": "specs/01_PRD.md",
+      "bytes": 10025,
+      "sha256": "531db7a08c1b82665d8e06a064ad7748c486b6b9a523201bcc213dbe38ebe10b"
+    },
+    {
+      "path": "specs/02_UI_UX.md",
+      "bytes": 12485,
+      "sha256": "7e8bde76140fbb965331c2c50c1391f4526acd6088ae4a20ad49534d2b66ce0c"
+    },
+    {
+      "path": "specs/03_ARCHITECTURE.md",
+      "bytes": 8721,
+      "sha256": "ec5da64568446c22e16f91e324d2d295c5079e7763e51edb8f30cc1b48afa8e4"
+    },
+    {
+      "path": "specs/04_RTDB_SCHEMA.md",
+      "bytes": 12375,
+      "sha256": "8866df3ab05eedb7409447ef586c67a52127d0772cb9f1c4d2230c75e51a62ff"
+    },
+    {
+      "path": "specs/05_FUNCTIONS_CATALOG.md",
+      "bytes": 63281,
+      "sha256": "d4818307a46c7be8452e77bd87ba2ea39bd31f726b232364b8a572638fa4a091"
+    },
+    {
+      "path": "specs/06_API_CONTRACTS.md",
+      "bytes": 7490,
+      "sha256": "a1cdc585c191e095599ab6aff20ca23677c644f5ccebfa371d11548294f846b9"
+    },
+    {
+      "path": "specs/07_INTEGRATIONS.md",
+      "bytes": 17410,
+      "sha256": "3110e64762d1756d383851b3190d257338bb08ebf1163c29f42c1b66ff123685"
+    },
+    {
+      "path": "specs/08_SECURITY_PRIVACY.md",
+      "bytes": 8472,
+      "sha256": "795f2ff534c9330651816e6392988d54d0ae888ba02dc6b3953ee18001573536"
+    },
+    {
+      "path": "specs/09_COMPONENT_LIBRARY.md",
+      "bytes": 8724,
+      "sha256": "70a5c7698cba07741ee67c1d8cb1cb21e737cbad69fa3a11849c7137663f34e2"
+    },
+    {
+      "path": "specs/10_TESTING_ACCEPTANCE.md",
+      "bytes": 8495,
+      "sha256": "e693afac331efa77dcc7138c791c16248a0bdee60c8c351735f091ec11b6add6"
+    },
+    {
+      "path": "specs/11_DELIVERY_PLAN.md",
+      "bytes": 6938,
+      "sha256": "af0b9ef37bf685a3835ff2bed9344c130850fe9dd398be449d01086bed44e070"
+    },
+    {
+      "path": "specs/12_PRODUCT_ANALYTICS.md",
+      "bytes": 3332,
+      "sha256": "b7e4ac849a73615e832c63ec2f9684cc13c3220dd1008738a712763c1954c681"
+    },
+    {
+      "path": "specs/13_CONFIGURATION_RUNBOOK.md",
+      "bytes": 6935,
+      "sha256": "26a8d25b3a7e5bed3b7e67d0222ee4b7d0aa696b112379e8dc4e966340dcb1a4"
+    }
+  ]
+}

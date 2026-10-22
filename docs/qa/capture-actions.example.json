@@ -1,0 +1,4 @@
+[
+  {"type":"wait","ms":350},
+  {"type":"screenshot","name":"first-screen.png"}
+]

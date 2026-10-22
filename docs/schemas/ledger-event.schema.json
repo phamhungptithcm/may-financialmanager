@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://may.example/schemas/ledger-event.schema.json",
+  "title": "Immutable Ledger Event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["eventId", "clientRequestId", "fingerprint", "schemaVersion", "kind", "currency", "amountMinor", "occurredAtMs", "createdAtMs", "actorUid", "postings"],
+  "properties": {
+    "eventId": {"type":"string", "minLength": 1},
+    "clientRequestId": {"type":"string", "minLength": 1},
+    "fingerprint": {"type":"string", "minLength": 10},
+    "schemaVersion": {"const": 1},
+    "kind": {"enum": ["INCOME","EXPENSE","TRANSFER","REVERSAL"]},
+    "currency": {"enum":["VND", "USD"]},
+    "amountMinor": {"type":"integer", "minimum":1,"maximum":9007199254740991},
+    "occurredAtMs": {"type":"integer", "minimum":0},
+    "createdAtMs": {"type":"integer", "minimum":0},
+    "actorUid": {"type":"string", "minLength":1},
+    "accountId": {"type":"string"},
+    "categoryId": {"type":"string"},
+    "reversesEventId": {"type":"string"},
+    "correctsEventId": {"type":"string"},
+    "merchant": {"type":"string", "maxLength":200},
+    "note": {"type":"string", "maxLength":500},
+    "postings": {"type":"object", "minProperties":2, "additionalProperties": {"type":"object","additionalProperties":false,"required":["ledgerAccount","deltaMinor"],"properties":{"ledgerAccount":{"type":"string","minLength":1},"deltaMinor":{"type":"integer","minimum":-9007199254740991,"maximum":9007199254740991}}}}
+  },
+  "$comment": "Validate sum(deltaMinor)==0 in TS service, plus one canonical currency, account ownership, idempotency and reversal invariants; JSON Schema cannot express those business rules."
+}

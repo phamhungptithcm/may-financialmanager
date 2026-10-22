@@ -1,0 +1,14 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Deliberate default deny. The proposed v2 production flow uses short-lived
+    // GCS V4 signed upload/download URLs minted by Cloud Functions ONLY AFTER
+    // Auth/App Check/household membership/job reservation. Signed URL access
+    // bypasses these client SDK rules: constrain TTL, path, method, Content-Type,
+    // checksum, and validate file signature/size on GCS finalize before OCR.
+    // No client may read arbitrary receipt photos or exported financial data.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

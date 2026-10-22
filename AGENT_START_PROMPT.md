@@ -1,0 +1,7 @@
+# Phase 0 — Start Mây Engineering Delivery
+
+Act as a senior Flutter engineer, Firebase architect, test engineer and UI fidelity reviewer. Read `CLAUDE.md`, `AGENTS.md`, `docs/README.md`, approved HTML reference `docs/FamilyClanMockupFullFlow.html`, `docs/Family Finance — End-to-end UX Flow.jam`, and relevant `docs/specs/*` before coding. The owner confirmed the HTML represents Mây despite its filename.
+
+First execute repository audit only: inspect file tree and `git status`; verify that no Flutter/Functions product code exists yet; run `python3 scripts/reference_preflight.py --strict`; inventory HTML DOM/CSS/JS and motion; verify whether the FigJam board is readable via the Figma connector or whether a reviewed flow export must be produced. DO NOT treat `.jam` as PNG. Map specs: 39 FR, 48 UI, 53 Functions, 54 components and 44 test cases without assuming these counts equal implemented features.
+
+Write a concise coverage/gap matrix: screen/state → HTML selector → FigJam node/edge → Flutter route/component → cloud callable/event/DTO → RTDB path/security rule → test. Mark all uninspected sources BLOCKED. Do not write application code or deploy until Phase 0 review is documented. Propose an explicit dependency-ordered Phase 1 implementation plan with quality gates. Then proceed in approved small vertical slices when prerequisites are met, preserving exact Vietnamese copy, motion and UX flow from the reference.

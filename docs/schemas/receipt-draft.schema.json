@@ -1,0 +1,159 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://may.example/schemas/receipt-draft.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "jobId",
+    "householdId",
+    "createdByUid",
+    "state",
+    "provider",
+    "merchant",
+    "issueDate",
+    "totalMinor",
+    "currency",
+    "lineItems",
+    "createdAtMs"
+  ],
+  "properties": {
+    "jobId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "householdId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "createdByUid": {
+      "type": "string",
+      "minLength": 1
+    },
+    "state": {
+      "enum": [
+        "CREATED",
+        "UPLOADED",
+        "QUEUED",
+        "PROCESSING",
+        "REVIEW_REQUIRED",
+        "CONFIRMED",
+        "FAILED",
+        "DISCARDED",
+        "EXPIRED"
+      ]
+    },
+    "provider": {
+      "type": "string"
+    },
+    "providerVersion": {
+      "type": "string"
+    },
+    "createdAtMs": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "merchant": {
+      "$ref": "#/$defs/strField"
+    },
+    "issueDate": {
+      "$ref": "#/$defs/strField"
+    },
+    "totalMinor": {
+      "$ref": "#/$defs/numField"
+    },
+    "currency": {
+      "$ref": "#/$defs/strField"
+    },
+    "lineItems": {
+      "type": "array",
+      "maxItems": 500,
+      "items": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "quantityDecimal": {
+            "type": "string"
+          },
+          "totalMinor": {
+            "type": "integer"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "$defs": {
+    "strField": {
+      "type": "object",
+      "required": [
+        "value",
+        "confidence",
+        "status"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "confidence": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "status": {
+          "enum": [
+            "FOUND",
+            "LOW_CONFIDENCE",
+            "MISSING",
+            "USER_CORRECTED"
+          ]
+        }
+      }
+    },
+    "numField": {
+      "type": "object",
+      "required": [
+        "value",
+        "confidence",
+        "status"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "confidence": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "status": {
+          "enum": [
+            "FOUND",
+            "LOW_CONFIDENCE",
+            "MISSING",
+            "USER_CORRECTED"
+          ]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,209 @@
+{
+  "kit_version": "3.0",
+  "source": "Mây Finance repo aligned overlay",
+  "reference_html": "docs/FamilyClanMockupFullFlow.html",
+  "reference_flow": "docs/Family Finance — End-to-end UX Flow.jam",
+  "note": "Does not include original documents or production code. Files are add-only via installer.",
+  "files": [
+    {
+      "path": ".claude/agents/may-backend-contract-auditor.md",
+      "sha256": "7b3faa7c3d73f6779ce13ea5c2523c22bc13468f838690be75cad3cdd36f2b57",
+      "bytes": 753
+    },
+    {
+      "path": ".claude/agents/may-design-auditor.md",
+      "sha256": "5141eff90c2a0f56730153739d38402e91d1995736eaa4f710a342662d19ac0d",
+      "bytes": 1068
+    },
+    {
+      "path": ".claude/agents/may-finance-security-auditor.md",
+      "sha256": "46ea9ea01798dbb7327f9b0d6a3cb16262282f9628f67cf01f39e9c503f3e5ec",
+      "bytes": 888
+    },
+    {
+      "path": ".claude/hooks/pre_tool_guard.py",
+      "sha256": "2fcc45d3086da5560057fe7feefc73139e3db9184bc3ddf3a7b0d85e2c8be785",
+      "bytes": 4790
+    },
+    {
+      "path": ".claude/rules/design-reference.md",
+      "sha256": "45ce68bc7603ef20df198a3405a09da3edc402a17dc5ef14088ee449659f1884",
+      "bytes": 612
+    },
+    {
+      "path": ".claude/rules/firebase-safety.md",
+      "sha256": "3badea687f2fde6caec4968577edad90477941866fd7002f8b3ba868e62534f1",
+      "bytes": 495
+    },
+    {
+      "path": ".claude/settings.json",
+      "sha256": "faea72e7971582e3d414aec6114e2bee78a36d36b543ddd1866718141abe78a9",
+      "bytes": 572
+    },
+    {
+      "path": ".claude/skills/may-financial-integrity/SKILL.md",
+      "sha256": "38fd8c1190e8b9540d8e7f1edda93dd1491b52e59b74a38285cc8d83107cd701",
+      "bytes": 1464
+    },
+    {
+      "path": ".claude/skills/may-firebase-contracts/SKILL.md",
+      "sha256": "ab8fe06d05c2511bdaa6b1f74963575d9be65a2cd85706287a52c89880660bf7",
+      "bytes": 1549
+    },
+    {
+      "path": ".claude/skills/may-implement-feature/SKILL.md",
+      "sha256": "bd336050466afe89b71300921643fdfb628f9fe213173731fffc19a932a9a025",
+      "bytes": 2138
+    },
+    {
+      "path": ".claude/skills/may-release-gate/SKILL.md",
+      "sha256": "a54847359770b2e3f7e2c7128af1c54d3f7f59cc8dec18e248e196ce3341eaba",
+      "bytes": 1614
+    },
+    {
+      "path": ".claude/skills/may-ui-fidelity/SKILL.md",
+      "sha256": "e9680d031f01ad491dbc617292c1b604dcb413b00facf1cd68ea0abd58c636be",
+      "bytes": 2041
+    },
+    {
+      "path": ".claude/skills/may-ux-flow-audit/SKILL.md",
+      "sha256": "dd61cdf7271ef429fc510987709c9330b70a14f4248a3304f8943e1b26bb38c0",
+      "bytes": 1814
+    },
+    {
+      "path": ".github/workflows/may-reference-contract.yml",
+      "sha256": "c1ed4baa51c11f9f5200ed7ec159266090812e0c386d4032dde0344aa626ba39",
+      "bytes": 1107
+    },
+    {
+      "path": "AGENT.md",
+      "sha256": "544bca8de8228e9f0aa3e4de765e153b9686b35f1cf96e24eb22d3f67f08e502",
+      "bytes": 578
+    },
+    {
+      "path": "AGENTS.md",
+      "sha256": "c65fa67580094f17223464ec99ad5ca08c2982a890d7f7657380f4686430224b",
+      "bytes": 3864
+    },
+    {
+      "path": "AGENT_START_PROMPT.md",
+      "sha256": "72b984fa34301c97364ab39b48971c05853648eaba00116c28d91624cb94af7f",
+      "bytes": 1448
+    },
+    {
+      "path": "CLAUDE.md",
+      "sha256": "02553f3575dd56843b500e042e7575d2ef0d0e289f610519e06360b581a2a5d3",
+      "bytes": 4726
+    },
+    {
+      "path": "README_AGENT_KIT.md",
+      "sha256": "d7b96cbec63705686bafff88e37b73f67e574aadfb2fabe5c601554296349392",
+      "bytes": 3593
+    },
+    {
+      "path": "SKILLS_CATALOG.md",
+      "sha256": "fa7bcf4b5985e31d44170712bd2420096530272d4ea55f9000383aad60314c73",
+      "bytes": 1638
+    },
+    {
+      "path": "VERIFICATION_REPORT.md",
+      "sha256": "c5ddcbe38f3fd55997a1c0ee3b64911bea282b5172aa2d4496037c52027918f8",
+      "bytes": 1794
+    },
+    {
+      "path": "docs/qa/APPROVED_REFERENCES.md",
+      "sha256": "26f6064a230841021c6dd1461a591c2606ba45f5d24e40ab32d8317df6dd033a",
+      "bytes": 1206
+    },
+    {
+      "path": "docs/qa/BACKEND_INTEGRATION_CHECKLIST.md",
+      "sha256": "add76772c803a47161710df994fb893a2946ce2ad8004aa6dc0f71937235ea91",
+      "bytes": 2106
+    },
+    {
+      "path": "docs/qa/BACKEND_TRACE_MATRIX.csv",
+      "sha256": "cdf5ddba5a68d3459c50204f423f25c2debe5f60b626f1b0f95b81f1eef2fb8e",
+      "bytes": 198
+    },
+    {
+      "path": "docs/qa/DESIGN_FIDELITY_CHECKLIST.md",
+      "sha256": "d713a5624fcfca498ca4abce5bbf9ffc8cb8bbc99fbc39365d3ac1508eaf8f7c",
+      "bytes": 1443
+    },
+    {
+      "path": "docs/qa/IMPLEMENTATION_TRACE_TEMPLATE.md",
+      "sha256": "0b807128b6c54a766e022d2231dd09f9e319d3520a1cc04a249664d53da06f7e",
+      "bytes": 705
+    },
+    {
+      "path": "docs/qa/REFERENCE_CONFLICTS.md",
+      "sha256": "a05bf4a86d32473604b81e7acfe22c4db5957de867b1a206d0069989ba98251e",
+      "bytes": 397
+    },
+    {
+      "path": "docs/qa/UI_FLOW_MATRIX.csv",
+      "sha256": "ff9646720002f1d8270117466982b0f9c69917cbc33735fb8786fabd03c160e0",
+      "bytes": 183
+    },
+    {
+      "path": "docs/qa/capture-actions.example.json",
+      "sha256": "39a52b96819b460f31ceefa1d649da95d6bd7de022d847221e7b8e5633ffee37",
+      "bytes": 82
+    },
+    {
+      "path": "docs/qa/design-references/README.md",
+      "sha256": "1ac553072b1ccbf29c620db71a592eb41ed40cba52e09053f1962d916541db2e",
+      "bytes": 634
+    },
+    {
+      "path": "install.py",
+      "sha256": "ff0b9daa030ac4a440112758d0ef6c6eefef3670750bc92f1e18815908e1c463",
+      "bytes": 2197
+    },
+    {
+      "path": "scripts/audit_traceability.py",
+      "sha256": "b8926c65e14071d6963174fe8c5397efc2eec25c8737dc79b032fb49bd2aba8e",
+      "bytes": 2667
+    },
+    {
+      "path": "scripts/capture_mockup.mjs",
+      "sha256": "dd3e25621ab14b9ebf085c53ca972918323c3ed0c5e59853cced72d0cc7a3181",
+      "bytes": 4214
+    },
+    {
+      "path": "scripts/inspect_mockup.py",
+      "sha256": "cf21f3f4179c05a8ff365779af321b24dc25a41d6ee0156e833eb94b87ace48a",
+      "bytes": 3145
+    },
+    {
+      "path": "scripts/reference_preflight.py",
+      "sha256": "6ace8f2b260823af0e546f084394518fae175d17abbb2c65651282c3a8c1ac96",
+      "bytes": 8709
+    },
+    {
+      "path": "scripts/register_flow_export.py",
+      "sha256": "7856057f6db82a95710577e513a2240e02c7429e4365aab800d4cd12ce3fd26e",
+      "bytes": 2506
+    },
+    {
+      "path": "scripts/verify_repository.sh",
+      "sha256": "acb66c3526b025c340a2293f0bf79bc6a86cee0a56ec3d296ab2f3bc4446fd3c",
+      "bytes": 1986
+    },
+    {
+      "path": "scripts/visual_compare.py",
+      "sha256": "4dde8e8ab76982a54c59bef149166e30563da66aa81b83ec44518d43f01cf777",
+      "bytes": 1966
+    },
+    {
+      "path": "tests/test_reference_guards.py",
+      "sha256": "14f771a05744d08b1afe51ec4eed6c6536a03f7df625171874cffc059755d85d",
+      "bytes": 4221
+    },
+    {
+      "path": "verify_skills.py",
+      "sha256": "9eb3b546f7b5f810ea7a23f48e7d02f7375926fe80a4307856f03b6ea9dafd9b",
+      "bytes": 2660
+    }
+  ]
+}

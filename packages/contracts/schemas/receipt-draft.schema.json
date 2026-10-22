@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "may://schemas/receipt-draft",
+  "title": "ReceiptDraft",
+  "description": "OCR-extracted receipt draft pending user review. Never posted to ledger without explicit confirmation.",
+  "type": "object",
+  "required": [
+    "jobId",
+    "householdId",
+    "createdByUid",
+    "state",
+    "provider",
+    "merchant",
+    "issueDate",
+    "totalMinor",
+    "createdAtMs"
+  ],
+  "properties": {
+    "jobId": { "type": "string" },
+    "householdId": { "type": "string" },
+    "createdByUid": { "type": "string" },
+    "state": {
+      "type": "string",
+      "enum": ["CREATED", "UPLOADED", "QUEUED", "PROCESSING", "REVIEW_REQUIRED", "CONFIRMED", "FAILED", "DISCARDED", "EXPIRED"]
+    },
+    "provider": { "type": "string" },
+    "providerVersion": { "type": "string" },
+    "merchant": { "$ref": "#/$defs/ocrFieldString" },
+    "issueDate": { "$ref": "#/$defs/ocrFieldString" },
+    "totalMinor": { "$ref": "#/$defs/ocrFieldNumber" },
+    "currency": { "$ref": "#/$defs/ocrFieldCurrency" },
+    "lineItems": {
+      "type": "array",
+      "items": { "type": "object" }
+    },
+    "createdAtMs": { "type": "integer" },
+    "reviewedAtMs": { "type": ["integer", "null"] }
+  },
+  "$defs": {
+    "ocrFieldString": {
+      "type": "object",
+      "required": ["value", "confidence", "status"],
+      "properties": {
+        "value": { "type": ["string", "null"] },
+        "confidence": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "status": { "type": "string", "enum": ["FOUND", "LOW_CONFIDENCE", "MISSING", "USER_CORRECTED"] }
+      }
+    },
+    "ocrFieldNumber": {
+      "type": "object",
+      "required": ["value", "confidence", "status"],
+      "properties": {
+        "value": { "type": ["number", "null"] },
+        "confidence": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "status": { "type": "string", "enum": ["FOUND", "LOW_CONFIDENCE", "MISSING", "USER_CORRECTED"] }
+      }
+    },
+    "ocrFieldCurrency": {
+      "type": "object",
+      "required": ["value", "confidence", "status"],
+      "properties": {
+        "value": { "type": ["string", "null"], "enum": ["VND", "USD", null] },
+        "confidence": { "type": ["number", "null"] },
+        "status": { "type": "string", "enum": ["FOUND", "LOW_CONFIDENCE", "MISSING", "USER_CORRECTED"] }
+      }
+    }
+  }
+}

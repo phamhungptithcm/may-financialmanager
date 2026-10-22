@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "may://schemas/ledger-event",
+  "title": "LedgerEvent",
+  "description": "Immutable canonical ledger event in double-entry format. Write-once, append-only.",
+  "type": "object",
+  "required": [
+    "eventId",
+    "clientRequestId",
+    "fingerprint",
+    "schemaVersion",
+    "kind",
+    "amountMinor",
+    "currency",
+    "occurredAtMs",
+    "createdAtMs",
+    "actorUid",
+    "postings"
+  ],
+  "properties": {
+    "eventId": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^evt_[a-zA-Z0-9_]+$",
+      "description": "UUID or ULID for the event"
+    },
+    "clientRequestId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Client-generated request ID for idempotency"
+    },
+    "fingerprint": {
+      "type": "string",
+      "minLength": 1,
+      "description": "SHA-256 of canonical payload for deduplication"
+    },
+    "schemaVersion": {
+      "type": "integer",
+      "const": 1
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["EXPENSE", "INCOME", "TRANSFER", "REVERSAL"]
+    },
+    "amountMinor": {
+      "type": "integer",
+      "description": "Integer minor units (never float). VND exponent = 0, USD exponent = 2"
+    },
+    "currency": {
+      "type": "string",
+      "enum": ["VND", "USD"]
+    },
+    "occurredAtMs": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "User-provided occurred-at timestamp (milliseconds)"
+    },
+    "createdAtMs": {
+      "type": "integer",
+      "description": "Server-assigned creation timestamp"
+    },
+    "actorUid": {
+      "type": "string",
+      "description": "Auth UID of the actor (NOT from client body)"
+    },
+    "postings": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["ledgerAccount", "deltaMinor"],
+        "properties": {
+          "ledgerAccount": { "type": "string" },
+          "deltaMinor": { "type": "integer" }
+        }
+      },
+      "minProperties": 2,
+      "maxProperties": 10
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "kind": { "const": "EXPENSE" } } },
+      "then": { "required": ["accountId", "categoryId"] }
+    },
+    {
+      "if": { "properties": { "kind": { "const": "INCOME" } } },
+      "then": { "required": ["accountId", "categoryId"] }
+    },
+    {
+      "if": { "properties": { "kind": { "const": "TRANSFER" } } },
+      "then": { "required": ["fromAccountId", "toAccountId"] }
+    }
+  ]
+}
