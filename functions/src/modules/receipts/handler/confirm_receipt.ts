@@ -1,19 +1,15 @@
-/** Mây Family Finance — Callable Function Stub
+/** Mây Family Finance — Callable Function Stub: confirmReceiptDraft
  *
- * confirmReceiptDraft: User confirms OCR-extracted receipt fields.
+ * Confirms a receipt draft and creates the corresponding ledger event.
  */
 
 import { onCall } from 'firebase-functions/v2/https';
-
-interface ConfirmReceiptInput {
-  householdId: string;
-  jobId: string;
-  totalMinor: number;
-  currency: string;
-  items: unknown[];
-}
+import { guardAuth } from '../../../core/auth/auth_context.js';
 
 export const confirmReceiptDraft = onCall(
-  { requireAuth: true, maxInstances: 10, timeoutSeconds: 60 },
-  async (request) => ({ status: 'stubbed', message: 'Phase 4 implementation pending' }),
+  { maxInstances: 10, timeoutSeconds: 30 },
+  (request) => {
+    guardAuth(request);
+    return { status: 'stubbed', message: 'Phase 1 implementation pending' };
+  },
 );

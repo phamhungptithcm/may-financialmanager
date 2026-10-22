@@ -112,13 +112,8 @@
     "transactionList": {
       "$hid": {
         "$ym": {
-          ".indexOn": [
-            "occurredAtMs"
-          ],
-          ".read": "auth != null && root.child('members').child($hid).child(auth.uid).child('status').val() === 'ACTIVE' && query.orderByChild === 'occurredAtMs' && query.limitToLast != null && query.limitToLast <= 50",
-          "$eventId": {
-            ".read": "auth != null && root.child('members').child($hid).child(auth.uid).child('status').val() === 'ACTIVE'"
-          }
+          ".indexOn": ["occurredAtMs"],
+          ".read": "auth != null && root.child('members').child($hid).child(auth.uid).child('status').val() === 'ACTIVE'"
         }
       }
     },
@@ -126,23 +121,16 @@
       "$hid": {
         "$accountId": {
           "$ym": {
-            ".indexOn": [
-              "occurredAtMs"
-            ],
-            ".read": "auth != null && root.child('members').child($hid).child(auth.uid).child('status').val() === 'ACTIVE' && query.orderByChild === 'occurredAtMs' && query.limitToLast != null && query.limitToLast <= 50",
-            "$eventId": {
-              ".read": "auth != null && root.child('members').child($hid).child(auth.uid).child('status').val() === 'ACTIVE'"
-            }
+            ".indexOn": ["occurredAtMs"],
+            ".read": "auth != null && root.child('members').child($hid).child(auth.uid).child('status').val() === 'ACTIVE'"
           }
         }
       }
     },
     "notificationInbox": {
       "$uid": {
-        ".indexOn": [
-          "createdAtMs"
-        ],
-        ".read": "auth != null && auth.uid === $uid && query.orderByChild === 'createdAtMs' && query.limitToLast != null && query.limitToLast <= 50",
+        ".indexOn": ["createdAtMs"],
+        ".read": "auth != null && auth.uid === $uid",
         "$notificationId": {
           ".read": "auth != null && auth.uid === $uid"
         }

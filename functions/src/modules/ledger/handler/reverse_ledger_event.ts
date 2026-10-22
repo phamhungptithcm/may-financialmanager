@@ -1,17 +1,15 @@
-/** Mây Family Finance — Callable Function Stub
+/** Mây Family Finance — Callable Function Stub: reverseLedgerEvent
  *
- * reverseLedgerEvent: Creates a reversal + replacement for an existing ledger event.
+ * Reverses a confirmed ledger transaction (compensating reversal).
  */
 
 import { onCall } from 'firebase-functions/v2/https';
-
-interface ReverseInput {
-  householdId: string;
-  eventId: string;
-  reason: string;
-}
+import { guardAuth } from '../../../core/auth/auth_context.js';
 
 export const reverseLedgerEvent = onCall(
-  { requireAuth: true, maxInstances: 10, timeoutSeconds: 30 },
-  async (request) => ({ status: 'stubbed', message: 'Phase 2 implementation pending' }),
+  { maxInstances: 10, timeoutSeconds: 30 },
+  (request) => {
+    guardAuth(request);
+    return { status: 'stubbed', message: 'Phase 1 implementation pending' };
+  },
 );

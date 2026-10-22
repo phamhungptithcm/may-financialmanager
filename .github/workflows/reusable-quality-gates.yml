@@ -5,15 +5,13 @@
 # mandatory quality checks shared between Branch CI and Main
 # Release.  Intended to be called from other workflows via
 # `workflow_call` or executed independently for auditing.
-#
-# Triggers: workflow_call
-# Inputs:   none (repo state is read directly)
-# Jobs:     flutter-validate | functions-validate | emulator-test | security-scan
 
 name: Reusable Quality Gates
 
 on:
   workflow_call:
+
+permissions: {}  # minimal — each job adds only what it needs
 
 jobs:
   # ===========================================================
@@ -21,6 +19,9 @@ jobs:
   # ===========================================================
   flutter-validate:
     name: Flutter (format + analyze + test)
+    permissions:
+      contents: read
+      checks: write
     runs-on: ubuntu-latest
     outputs:
       test-results: ${{ steps.coverage.outputs.passed }}
@@ -28,7 +29,7 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # needed for version calculation
+          fetch-depth: 0
 
       - name: Setup Java 17 (for Flutter)
         uses: actions/setup-java@v4
@@ -77,6 +78,8 @@ jobs:
   # ===========================================================
   functions-validate:
     name: Functions (lint + typecheck + test)
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source
@@ -116,6 +119,8 @@ jobs:
   # ===========================================================
   emulator-test:
     name: Firebase Emulator integration
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     needs: [functions-validate]
     steps:
@@ -144,7 +149,6 @@ jobs:
           NODE_ENV: 'test'
           FIREBASE_PROJECT: 'test-project'
         run: |
-          # Only run if rules exist and are non-trivial.
           RULES_SIZE=$(wc -c < docs/firebase/database.rules.json || echo 0)
           if [[ "$RULES_SIZE" -lt 20 ]]; then
             echo "::warning::RTDB rules too small ($RULES_SIZE B) — skipping emulator test."
@@ -154,8 +158,14 @@ jobs:
             --only functions,database \
             --project "$FIREBASE_PROJECT" \
             "npm test" || {
-            # Exit code 1 from emulator is expected when no test files exist.
-            echo "::notice::Firebase Emulator: no matching test files found (prerequisite for Phase 2)."
+            local exit_code=$?
+            # Distinguish "no tests found" from actual failure.
+            if [ $exit_code -eq 1 ]; then
+              echo "::notice::Firebase Emulator: no matching test files found yet."
+              exit 0
+            fi
+            echo "::error::Firebase Emulator test failed with exit code $exit_code" >&2
+            exit $exit_code
           }
 
   # ===========================================================
@@ -163,6 +173,8 @@ jobs:
   # ===========================================================
   security-scan:
     name: Security scan (gitleaks + trivy)
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source
@@ -182,9 +194,9 @@ jobs:
           severity: 'CRITICAL,HIGH'
           exit-code: '1'
 
-      - name: Trivy — dependency vulnerability scan
+      - name: Trivy — dependency vulnerability scan (report only)
         uses: aquasecurity/trivy-action@v0
         with:
           scan-type: 'dep'
           severity: 'CRITICAL,HIGH'
-          exit-code: '0'  # report-only; do not block on deps yet
+          exit-code: '0'

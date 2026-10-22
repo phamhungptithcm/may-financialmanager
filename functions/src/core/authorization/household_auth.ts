@@ -4,11 +4,40 @@
  * NEVER trusts client-provided role values. Always reads from /members/{hid}/{uid}.
  */
 
-import { getAuthInfo, type AuthInfo } from '../auth/auth_context.js';
+import { type AuthInfo } from '../auth/auth_context.js';
 import { AppError, ErrorCode } from '../errors/app_error.js';
+import * as admin from 'firebase-admin';
 
-/** Allowed roles for a given resource/action pair. */
+// Initialize Admin SDK — required before any household access check.
+let _db: admin.database.Database | null = null;
+
+function getDatabase(): admin.database.Database {
+  if (!_db) {
+    // Admin SDK must be initialized by the Functions runtime via
+    // `admin.initializeApp()` or `initializeApp({ databaseURL: '...' })`.
+    try {
+      _db = admin.database();
+    } catch (_) {
+      throw new AppError(
+        ErrorCode.TEMPORARY_UNAVAILABLE,
+        'Firebase Admin not initialized',
+        true,
+      );
+    }
+  }
+  return _db;
+}
+
+// -- Allowed roles for a given resource/action pair --
+
 export type RoleRequirement = 'OWNER' | 'ADMIN' | 'EDITOR' | 'VIEWER' | 'MEMBER';
+
+/** Member status values stored in /members/{hid}/{uid}/status */
+enum MemberStatus {
+  ACTIVE = 'ACTIVE',
+  PENDING = 'PENDING',
+  REMOVED = 'REMOVED',
+}
 
 /**
  * Checks if a user has the required role in a household.
@@ -19,16 +48,26 @@ export async function checkHouseholdAccess(
   householdId: string,
   requiredRole: RoleRequirement,
 ): Promise<boolean> {
-  // MVP placeholder — actual implementation reads /members/{hid}/{uid} from RTDB.
-  // The Firebase Admin SDK Firestore/RTDB client would be imported here.
+  const memberRef = getDatabase()
+    .ref(`members/${householdId}/${auth.uid}`);
 
-  // In production:
-  // const memberDoc = await admin.firestore().doc(`members/${householdId}/${auth.uid}`).get();
-  // if (!memberDoc.exists) throw new AppError(ErrorCode.HOUSEHOLD_ACCESS_DENIED, ...);
-  // const role = memberDoc.data()!.role;
-  // return hasRequiredRole(role, requiredRole);
+  const snapshot = await memberRef.once('value');
 
-  return true; // Placeholder — remove when actual RTDB access is implemented.
+  if (!snapshot.exists()) {
+    return false; // No membership record — access denied.
+  }
+
+  const data = snapshot.val();
+  const status = data?.status as string;
+  const role = data?.role as string;
+
+  // Must be ACTIVE member. PENDING/REMOVED are denied.
+  if (status !== MemberStatus.ACTIVE) {
+    return false;
+  }
+
+  // Check role hierarchy — member role must meet or exceed required role.
+  return hasRequiredRole(role, requiredRole);
 }
 
 /**
@@ -59,13 +98,55 @@ function hasRequiredRole(memberRole: string, requiredRole: RoleRequirement): boo
 }
 
 /**
+ * Returns the authenticated user's role in a household, or null if not found.
+ */
+export async function getMemberRole(
+  auth: AuthInfo,
+  householdId: string,
+): Promise<string | null> {
+  const memberRef = getDatabase()
+    .ref(`members/${householdId}/${auth.uid}`);
+
+  const snapshot = await memberRef.once('value');
+
+  if (!snapshot.exists()) {
+    return null;
+  }
+
+  const data = snapshot.val();
+  return data?.role as string | null;
+}
+
+/**
  * Validates that the current user is not removed from the household.
  */
 export async function checkMemberActive(
   auth: AuthInfo,
   householdId: string,
 ): Promise<AppError | null> {
-  // MVP placeholder — actual implementation checks members/{hid}/{uid}/status === 'ACTIVE'
+  const role = await getMemberRole(auth, householdId);
+
+  if (role === null) {
+    return new AppError(
+      ErrorCode.HOUSEHOLD_ACCESS_DENIED,
+      'Not a member of this household',
+      false,
+    );
+  }
+
+  // Additional check: verify status is ACTIVE via direct lookup.
+  const statusRef = getDatabase()
+    .ref(`members/${householdId}/${auth.uid}/status`);
+  const snapshot = await statusRef.once('value');
+
+  if (snapshot.val() !== MemberStatus.ACTIVE) {
+    return new AppError(
+      ErrorCode.HOUSEHOLD_ACCESS_DENIED,
+      'Membership is not active',
+      false,
+    );
+  }
+
   return null;
 }
 
@@ -76,6 +157,15 @@ export async function checkOwner(
   auth: AuthInfo,
   householdId: string,
 ): Promise<AppError | null> {
-  // MVP placeholder — actual implementation checks members/{hid}/{uid}/role === 'OWNER'
+  const role = await getMemberRole(auth, householdId);
+
+  if (role !== 'OWNER') {
+    return new AppError(
+      ErrorCode.ROLE_DENIED,
+      'Only the household owner can perform this action',
+      false,
+    );
+  }
+
   return null;
 }

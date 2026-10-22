@@ -7,7 +7,6 @@
  * - currency ISO 4217 validated
  */
 
-import { ErrorCode } from '../errors/app_error.js';
 
 /** Validates a single monetary amount for ledger posting. */
 export function validateMoneyAmount(

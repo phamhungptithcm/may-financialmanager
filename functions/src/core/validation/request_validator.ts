@@ -108,7 +108,6 @@ export function validateEpochMs(ms: unknown): number {
   if (typeof ms !== 'number' || !Number.isFinite(ms)) {
     throw new AppError(ErrorCode.VALIDATION_ERROR, 'Timestamp must be a finite number', false);
   }
-  const now = Date.now();
   // Allow timestamps from year 2000 to year 2100.
   if (ms < 946_684_800_000 || ms > 4_102_444_800_000) {
     throw new AppError(ErrorCode.VALIDATION_ERROR, 'Timestamp out of valid range', false);

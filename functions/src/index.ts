@@ -1,7 +1,6 @@
 /** Mây Family Finance — Functions Entry Point (index)
  *
- * Exports only triggers. All business logic lives in src/modules/*/handler.ts.
- * Module separation: index → handler → service → repository → mapper
+ * Exports only triggers. All business logic lives in modules subdirectory handler files.
  */
 
 // -- Callable Functions --
@@ -19,5 +18,5 @@ export { projectLedgerEvent } from './modules/ledger/triggers/project_ledger_eve
 // -- Scheduled Tasks --
 // export { buildAnalyticsSummary } from './modules/ledger/jobs/build_analytics_summary.js';
 
-// -- HTTP/Webhook Handlers --
-// export { handleAppStoreNotification } from './modules/billing/handlers/appstore_webhook.js';
+// -- FCM Topic Subscriptions / User-facing push --
+// export { subscribeUserToTopics } from './modules/notifications/handler/subscribe_user_topics.js';

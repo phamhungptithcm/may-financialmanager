@@ -17,16 +17,18 @@ enum Period {
   String get key => name.toUpperCase();
 
   /// Returns the YYYYMM period key for a given date in the given timezone.
-  /// Used for RTDB sharding and summary storage.
+  /// If [tz] is provided, the date is adjusted to that UTC offset before
+  /// computing the month key. Default: Asia/Ho_Chi_Minh (UTC+7).
   static String periodKey(DateTime date, {String? tz}) {
-    // MVP: uses local date. v2 should accept timezone offset via Intl/TimeZone package.
-    return '${date.year}${date.month.toString().padLeft(2, '0')}';
+    final effectiveDate = applyTimezone(date, tz);
+    return '${effectiveDate.year}${effectiveDate.month.toString().padLeft(2, '0')}';
   }
 
   /// Returns the YYYYMMDD key for week periods (uses ISO week).
   static String weekKey(DateTime date, {String? tz}) {
-    final year = date.year;
-    final dayOfYear = date.difference(DateTime(year, 1, 1)).inDays + 1;
+    final effectiveDate = applyTimezone(date, tz);
+    final year = effectiveDate.year;
+    final dayOfYear = effectiveDate.difference(DateTime(year, 1, 1)).inDays + 1;
     final week = (dayOfYear / 7).ceil();
     return '${year}W${week.toString().padLeft(2, '0')}';
   }
@@ -35,7 +37,7 @@ enum Period {
   String toKey(DateTime date, {String? tz}) {
     switch (this) {
       case Period.year:
-        return date.year.toString();
+        return applyTimezone(date, tz).year.toString();
       case Period.month:
         return periodKey(date, tz: tz);
       case Period.week:
@@ -59,6 +61,37 @@ enum Period {
 
   @override
   String toString() => label;
+}
+
+/// Converts a [date] from any timezone to the target UTC offset string.
+/// If [tz] is null, defaults to Asia/Ho_Chi_Minh (UTC+7).
+DateTime applyTimezone(DateTime date, [String? tz]) {
+  if (tz == null || tz.isEmpty) return date.toUtc().add(const Duration(hours: 7));
+
+  // Supported timezones: parse common offset strings.
+  switch (tz) {
+    case 'Asia/Ho_Chi_Minh':
+    case 'Asia/Bangkok':
+    case 'Asia/Singapore':
+      return date.toUtc().add(const Duration(hours: 7));
+    case 'Asia/Tokyo':
+    case 'Asia/Seoul':
+      return date.toUtc().add(const Duration(hours: 9));
+    case 'America/New_York':
+    case 'America/Chicago':
+    case 'America/Los_Angeles':
+      // Simplified — no DST handling (v1 scope). Production should use intl/TimeZone.
+      const offsets = {
+        'America/New_York': -5,
+        'America/Chicago': -6,
+        'America/Los_Angeles': -8,
+      };
+      final offset = offsets[tz] ?? 0;
+      return date.toUtc().add(Duration(hours: offset));
+    default:
+      // Unknown timezone — fall back to UTC+7.
+      return date.toUtc().add(const Duration(hours: 7));
+  }
 }
 
 /// Represents a concrete month period (start/end boundaries).

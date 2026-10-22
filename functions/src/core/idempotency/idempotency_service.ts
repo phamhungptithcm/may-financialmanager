@@ -4,6 +4,8 @@
  * Prevents duplicate posting from retries (per BR-14 in specs/01).
  */
 
+import * as crypto from 'crypto';
+
 /** State transitions for operation deduplication. */
 export enum IdempotencyState {
   RESOLVED = 'RESOLVED',     // Result returned successfully
@@ -46,17 +48,17 @@ export interface IdempotencyRepository {
 }
 
 /**
- * Computes a stable canonical fingerprint for a command payload.
+ * Computes a stable SHA-256 canonical fingerprint for a command payload.
  * The fingerprint must be deterministic: same input → same output.
  */
 export function computeFingerprint(payload: Record<string, unknown>): string {
-  // Canonical serialization: sort keys, no whitespace.
+  // Canonical serialization: sort keys for deterministic order.
   const sorted = Object.entries(payload)
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([k, v]) => JSON.stringify({ [k]: normalizeValue(v) }));
 
   const canonical = `{${sorted.join(',')}}`;
-  return hash(canonical);
+  return crypto.createHash('sha256').update(canonical).digest('hex');
 }
 
 /**
@@ -65,17 +67,50 @@ export function computeFingerprint(payload: Record<string, unknown>): string {
  */
 function normalizeValue(v: unknown): unknown {
   if (v === null || v === undefined) return null;
-  if (typeof v === 'object') return JSON.stringify(v); // Simple approach
+  if (typeof v === 'boolean') return v ? true : false;
+  if (typeof v === 'number') {
+    // Ensure consistent number representation for safe integers.
+    if (Number.isSafeInteger(v)) return v;
+    // For floats, preserve exact string representation.
+    return String(v);
+  }
+  if (typeof v === 'string') return v;
+  if (typeof v === 'object') {
+    if (Array.isArray(v)) {
+      return v.map(normalizeValue);
+    }
+    // Objects: recursive canonicalization via sorted key pairs.
+    const entries = Object.entries(v)
+      .sort(([a], [b]) => a.localeCompare(b));
+    return Object.fromEntries(entries);
+  }
   return v;
 }
 
-// Simple hash for fingerprint (production should use crypto.createHash).
-function hash(str: string): string {
-  let h = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    h = ((h << 5) - h) + char;
-    h |= 0; // Convert to 32bit integer
-  }
-  return `fp_${Math.abs(h).toString(16)}`;
+/**
+ * Computes an idempotency key from household, user ID, and client request ID.
+ * Key format: <householdId>/<userId>/<requestId> (used as RTDB path segment).
+ */
+export function computeIdempotencyKey(
+  householdId: string,
+  userId: string,
+  requestId: string,
+): string {
+  return `${householdId}/${userId}/${requestId}`;
+}
+
+/**
+ * Generates a cryptographically secure UUID v4 request ID.
+ */
+export function generateRequestId(): string {
+  return crypto.randomUUID();
+}
+
+/**
+ * Validates that a fingerprint is a valid SHA-256 hex string (64 lowercase hex chars).
+ */
+export function validateFingerprint(fingerprint: unknown): boolean {
+  if (typeof fingerprint !== 'string') return false;
+  if (fingerprint.length !== 64) return false;
+  return /^[a-f0-9]{64}$/.test(fingerprint);
 }

@@ -76,14 +76,29 @@ jobs:
       - name: Setup Flutter SDK
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.x'
+          flutter-version: 'stable'
           channel: 'stable'
           cache: true
-          cache-key: 'flutter-3.24-x-release-${{ runner.os }}'
+          cache-key: 'flutter-${{ runner.os }}'
+
+      - name: Verify Flutter installation
+        run: flutter --version
 
       - name: Install dependencies
         working-directory: apps/mobile
-        run: flutter pub get
+        env:
+          PUB_HOSTED_URL: https://pub.dev
+          FLUTTER_STORAGE_BASE_URL: https://storage.googleapis.com
+        run: |
+          for attempt in 1 2 3; do
+            if flutter pub get; then
+              exit 0
+            fi
+            echo "Attempt $attempt failed, retrying..." >&2
+            sleep $((attempt * 5))
+          done
+          echo "::error::flutter pub get failed after 3 attempts" >&2
+          exit 1
 
       - name: Build Android APK (release)
         working-directory: apps/mobile
@@ -143,13 +158,24 @@ jobs:
       - name: Setup Flutter SDK
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.x'
+          flutter-version: 'stable'
           channel: 'stable'
           cache: true
 
       - name: Install dependencies
         working-directory: apps/mobile
-        run: flutter pub get
+        env:
+          PUB_HOSTED_URL: https://pub.dev
+          FLUTTER_STORAGE_BASE_URL: https://storage.googleapis.com
+        run: |
+          for attempt in 1 2 3; do
+            if flutter pub get; then
+              exit 0
+            fi
+            sleep $((attempt * 5))
+          done
+          echo "::error::flutter pub get failed after 3 attempts" >&2
+          exit 1
 
       - name: Build unsigned iOS app
         working-directory: apps/mobile

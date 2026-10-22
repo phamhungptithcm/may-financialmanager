@@ -1,19 +1,15 @@
-/** Mây Family Finance — Callable Function Stub
+/** Mây Family Finance — Callable Function Stub: updateHousehold
  *
- * updateHousehold: Updates household settings (name, etc.).
+ * Updates household metadata (name, avatar, etc.).
  */
 
 import { onCall } from 'firebase-functions/v2/https';
-
-interface UpdateHouseholdInput {
-  name?: string;
-}
+import { guardAuth } from '../../../core/auth/auth_context.js';
 
 export const updateHousehold = onCall(
-  {
-    requireAuth: true,
-    maxInstances: 5,
-    timeoutSeconds: 30,
+  { maxInstances: 10, timeoutSeconds: 30 },
+  (request) => {
+    guardAuth(request);
+    return { status: 'stubbed', message: 'Phase 1 implementation pending' };
   },
-  async (request) => ({ status: 'stubbed', message: 'Phase 1 implementation pending' }),
 );

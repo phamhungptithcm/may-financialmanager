@@ -71,6 +71,14 @@ describe('validateAppCheck', () => {
 
   it('rejects empty string in production mode', () => {
     process.env.APP_CHECK_DEV_BYPASS = 'false';
+    // Empty string is falsy → hits early return (line 63) → isDevBypassAllowed() returns false.
+    expect(validateAppCheck('')).toBe(false);
+  });
+
+  it('rejects invalid token in production mode', () => {
+    process.env.APP_CHECK_DEV_BYPASS = 'false';
+    // Short tokens without proper format should fail.
     expect(validateAppCheck(null)).toBe(false);
+    expect(validateAppCheck('short')).toBe(false);
   });
 });

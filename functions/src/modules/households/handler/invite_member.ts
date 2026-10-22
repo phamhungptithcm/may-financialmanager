@@ -1,17 +1,15 @@
-/** Mây Family Finance — Callable Function Stub
+/** Mây Family Finance — Callable Function Stub: inviteHouseholdMember
  *
- * inviteHouseholdMember: Creates an invite and sends notification.
+ * Invites a Firebase user to join the household.
  */
 
 import { onCall } from 'firebase-functions/v2/https';
-
-interface InviteInput {
-  householdId: string;
-  email: string;
-  role: string;
-}
+import { guardAuth } from '../../../core/auth/auth_context.js';
 
 export const inviteHouseholdMember = onCall(
-  { requireAuth: true, maxInstances: 5, timeoutSeconds: 30 },
-  async (request) => ({ status: 'stubbed', message: 'Phase 1 implementation pending' }),
+  { maxInstances: 10, timeoutSeconds: 30 },
+  (request) => {
+    guardAuth(request);
+    return { status: 'stubbed', message: 'Phase 1 implementation pending' };
+  },
 );

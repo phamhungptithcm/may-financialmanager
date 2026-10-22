@@ -45,7 +45,6 @@ export class AppError extends Error {
 
   /** Maps to HttpsError detail code for callable functions. */
   toHttpsErrorDetail(): { code: string; details: unknown } {
-    const httpCode = this.retryable ? 503 : 400;
     return {
       code: [
         ErrorCode.ACCOUNT_NOT_FOUND,
@@ -80,9 +79,11 @@ function generateCorrelationId(): string {
   return `corr_${ts}_${Math.random().toString(36).substring(2, 8)}`;
 }
 
-/** Sanitizes error messages to prevent PII leakage. */
+/**
+ * Sanitizes error messages to prevent PII leakage.
+ * Redacts emails, phone numbers, bank numbers, and financial amounts.
+ */
 function sanitizeMessage(msg: string): string {
-  // Remove any potential sensitive data patterns.
   let sanitized = msg;
 
   // Remove email addresses.
@@ -93,6 +94,12 @@ function sanitizeMessage(msg: string): string {
 
   // Remove potential credit card / bank account numbers.
   sanitized = sanitized.replace(/\b\d{12,}\b/g, '[REDACTED_NUMBER]');
+
+  // Remove financial amounts (e.g., "185,000 VND", "$1,850.00", "999,000 USD").
+  sanitized = sanitized.replace(
+    /\b\d{1,3}(?:,\d{3})+(?= VND| USD| EUR| £|\b)/gi,
+    '[REDACTED_AMOUNT]',
+  );
 
   return sanitized;
 }

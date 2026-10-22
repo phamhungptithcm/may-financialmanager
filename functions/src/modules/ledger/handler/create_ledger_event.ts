@@ -1,24 +1,15 @@
-/** Mây Family Finance — Callable Function Stub
+/** Mây Family Finance — Callable Function Stub: createLedgerEvent
  *
- * createLedgerEvent: Creates a new immutable ledger event.
- * Phase 2 implementation — validates postings, writes to /ledgerEvents/{hid}/{eventId}.
+ * Creates a new ledger transaction (income/expense/transfer).
  */
 
 import { onCall } from 'firebase-functions/v2/https';
-
-interface CreateLedgerEventInput {
-  householdId: string;
-  clientRequestId: string;
-  kind: 'EXPENSE' | 'INCOME' | 'TRANSFER';
-  amountMinor: number;
-  currency: string;
-  accountId: string;
-  categoryId?: string;
-  title?: string;
-  occurredAtMs: number;
-}
+import { guardAuth } from '../../../core/auth/auth_context.js';
 
 export const createLedgerEvent = onCall(
-  { requireAuth: true, maxInstances: 20, timeoutSeconds: 30 },
-  async (request) => ({ status: 'stubbed', message: 'Phase 2 implementation pending' }),
+  { maxInstances: 10, timeoutSeconds: 30 },
+  (request) => {
+    guardAuth(request);
+    return { status: 'stubbed', message: 'Phase 1 implementation pending' };
+  },
 );

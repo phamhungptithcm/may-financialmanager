@@ -53,7 +53,7 @@ export class StructuredLogger {
   private _log(severity: LogLevel, message: string, metadata: Record<string, unknown>): void {
     const entry: LogEntry = {
       severity,
-      correlationId: metadata.correlationId ?? 'N/A',
+      correlationId: typeof metadata.correlationId === 'string' ? metadata.correlationId : 'N/A',
       function: this.functionName,
       message,
       metadata: Object.fromEntries(
