@@ -1,0 +1,218 @@
+# ============================================================
+# Mây Family Finance — Branch CI Pipeline
+# ============================================================
+# Trigger: push to any non-main branch OR pull request targeting main.
+#
+# Behaviour:
+#   1. Run all quality gates (reusable workflow).
+#   2. Build Android artifacts (APK + AAB).
+#   3. Validate generated artifacts.
+#   4. Upload CI artifacts with 30-day retention.
+#
+# NEVER creates tags, releases, or deploys to production.
+# Permissions: read-only repository access (least-privilege).
+
+name: Branch CI
+
+on:
+  push:
+    branches-ignore:
+      - main
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: branch-ci-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  checks: write
+
+jobs:
+  # ===========================================================
+  # Quality gates (reused from reusable-quality-gates.yml)
+  # All must pass before any build step.
+  # ===========================================================
+  quality-gates:
+    name: Quality Gates
+    uses: ./.github/workflows/reusable-quality-gates.yml
+
+  # ===========================================================
+  # Android Build — APK + App Bundle
+  # Only runs if all quality gates passed.
+  # ===========================================================
+  build-android:
+    name: Build Android (APK + AAB)
+    needs: [quality-gates]
+    if: always() && needs.quality-gates.result == 'success'
+    runs-on: ubuntu-latest
+    outputs:
+      apk-valid: ${{ steps.verify.outputs.apk }}
+      aab-valid: ${{ steps.verify.outputs.aab }}
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.x'
+          channel: 'stable'
+          cache: true
+          cache-key: 'flutter-3.24-x-${{ runner.os }}'
+
+      - name: Install dependencies
+        working-directory: apps/mobile
+        run: flutter pub get
+
+      - name: Build Android APK
+        working-directory: apps/mobile
+        run: flutter build apk --release
+
+      - name: Build Android App Bundle
+        working-directory: apps/mobile
+        run: flutter build appbundle --release
+
+      - name: Verify artifacts
+        id: verify
+        run: |
+          APK_OK="false"
+          AAB_OK="false"
+          if [[ -s "apps/mobile/build/app/outputs/flutter-apk/app.apk" ]]; then
+            SHA=$(sha256sum apps/mobile/build/app/outputs/flutter-apk/app.apk | cut -d' ' -f1)
+            SIZE=$(du -h apps/mobile/build/app/outputs/flutter-apk/app.apk | cut -f1)
+            echo "  ✓ APK  $SIZE  sha256:$SHA"
+            APK_OK="true"
+          fi
+          if [[ -s "apps/mobile/build/app/outputs/bundle/release/app-release.aab" ]]; then
+            SHA=$(sha256sum apps/mobile/build/app/outputs/bundle/release/app-release.aab | cut -d' ' -f1)
+            SIZE=$(du -h apps/mobile/build/app/outputs/bundle/release/app-release.aab | cut -f1)
+            echo "  ✓ AAB  $SIZE  sha256:$SHA"
+            AAB_OK="true"
+          fi
+          echo "apk=$APK_OK" >> "$GITHUB_OUTPUT"
+          echo "aab=$AAB_OK" >> "$GITHUB_OUTPUT"
+
+      - name: Upload APK artifact
+        if: steps.verify.outputs.apk == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: may-apk-${{ github.run_id }}
+          path: apps/mobile/build/app/outputs/flutter-apk/app.apk
+          retention-days: 30
+
+      - name: Upload AAB artifact
+        if: steps.verify.outputs.aab == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: may-aab-${{ github.run_id }}
+          path: apps/mobile/build/app/outputs/bundle/release/app-release.aab
+          retention-days: 30
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutter-coverage-${{ github.run_id }}
+          path: apps/mobile/coverage/lcov.info
+          retention-days: 30
+
+      # Job summary for Branch CI.
+      - name: Publish job summary
+        run: |
+          echo "**Branch CI — Job Summary**" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Branch:** \`${{ github.ref_name }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Commit:** \`${{ github.sha::8}}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Trigger:** ${{ github.event_name }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Job | Status |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|-----|--------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Quality Gates | ${{ needs.quality-gates.result == 'success' && '✅ Pass' || '❌ Fail' }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Android APK | ${{ steps.verify.outputs.apk == 'true' && '✅ Valid' || '⊘ Skipped' }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Android AAB | ${{ steps.verify.outputs.aab == 'true' && '✅ Valid' || '⊘ Skipped' }} |" >> "$GITHUB_STEP_SUMMARY"
+
+  # ===========================================================
+  # iOS Build — unsigned artifact (macOS only)
+  # ===========================================================
+  build-ios:
+    name: Build iOS (unsigned)
+    needs: [quality-gates]
+    if: always() && needs.quality-gates.result == 'success' && runner.os == 'macOS'
+    runs-on: macos-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.x'
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        working-directory: apps/mobile
+        run: flutter pub get
+
+      - name: Build unsigned iOS app
+        working-directory: apps/mobile
+        run: flutter build ios --release --no-codesign
+
+      - name: Validate .app artifact
+        run: |
+          APP_PATH="apps/mobile/build/ios/iphoneos/Runner.app"
+          if [[ -d "$APP_PATH" ]]; then
+            COUNT=$(find "$APP_PATH" -type f | wc -l)
+            echo "  ✓ iOS .app built with $COUNT files (unsigned)"
+          else
+            echo "  ⚠ No .app found — Xcode toolchain may require update." >&2
+          fi
+
+      # Code-signing note.
+      - name: Check provisioning profile
+        run: |
+          PROFILE=$(find "$HOME" -name "*.mobileprovision" 2>/dev/null | head -1 || true)
+          if [[ -z "$PROFILE" ]]; then
+            echo "  ⚠ No provisioning profile found — cannot build signed IPA." >&2
+            echo "    **PREREQUISITE:** Add `FLUTTER_IOS_PROVISIONING_PROFILE` and `FLUTTER_IOS_CERTIFICATE` secrets to repository." >&2
+          else
+            echo "  ✓ Provisioning profile found."
+          fi
+
+  # ===========================================================
+  # Final summary for Branch CI (always runs)
+  # ===========================================================
+  branch-summary:
+    name: Branch CI Summary
+    needs: [quality-gates, build-android]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish final job summary
+        run: |
+          echo "**Branch CI — Final Status**" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Branch:** \`${{ github.ref_name }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Commit:** \`${{ github.sha::8}}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Trigger:** ${{ github.event_name }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Check | Status |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|-------|--------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Quality Gates | ${{ needs.quality-gates.result == 'success' && '✅ Pass' || '❌ Fail' }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Android APK | ${{ needs.build-android.result == 'success' && '✅ Built' || (needs.build-android.result == 'skipped' && '⊘ Skipped' || '❌ Failed') }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          if [[ "${{ needs.quality-gates.result }}" == "success" ]]; then
+            echo "**✅ Changes are safe to merge.** Quality gates passed." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "**❌ Fixes required.** Quality gates did not pass — review failed jobs above." >> "$GITHUB_STEP_SUMMARY"
+          fi

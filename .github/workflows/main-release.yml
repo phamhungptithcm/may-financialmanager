@@ -1,0 +1,436 @@
+# ============================================================
+# Mây Family Finance — Main Release Pipeline
+# ============================================================
+# Trigger: push to main.
+#
+# Execution order (strict):
+#   1. Quality gates (Flutter, Functions, Emulator, Security) ← ALL MUST PASS
+#   2. Android build (APK + AAB)
+#   3. iOS build (unsigned on macOS runner)
+#   4. Artifact verification
+#   5. Version calculation
+#   6. Tag creation (only if version differs from latest tag)
+#   7. GitHub Release with professional release notes
+#
+# CRITICAL: Steps 5–7 are strictly dependent on ALL quality gates passing.
+# No tag, no release is created if any check fails.
+
+name: Main Release
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: main-release-${{ github.ref }}
+  cancel-in-progress: false  # do not cancel concurrent releases — they are idempotent
+
+permissions:
+  contents: write   # required for tag + release creation
+  packages: read
+
+jobs:
+  # ===========================================================
+  # Quality gates — MUST pass before any release step
+  # ===========================================================
+  quality-gates:
+    name: Quality Gates
+    uses: ./.github/workflows/reusable-quality-gates.yml
+
+  # ===========================================================
+  # Android build — APK + AAB for release
+  # ===========================================================
+  build-android:
+    name: Build Android Release
+    needs: [quality-gates]
+    if: always() && needs.quality-gates.result == 'success'
+    runs-on: ubuntu-latest
+    outputs:
+      apk-sha: ${{ steps.verify.outputs.apk-sha }}
+      aab-sha: ${{ steps.verify.outputs.aab-sha }}
+    steps:
+      - name: Checkout exact main commit (provenance)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Confirm commit matches push event source
+        run: |
+          PUSH_COMMIT="${{ github.sha }}"
+          CURRENT_COMMIT=$(git rev-parse HEAD)
+          if [[ "$PUSH_COMMIT" != "$CURRENT_COMMIT" ]]; then
+            echo "ERROR: commit mismatch — expected=$PUSH_COMMIT current=$CURRENT_COMMIT" >&2
+            exit 1
+          fi
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.x'
+          channel: 'stable'
+          cache: true
+          cache-key: 'flutter-3.24-x-release-${{ runner.os }}'
+
+      - name: Install dependencies
+        working-directory: apps/mobile
+        run: flutter pub get
+
+      - name: Build Android APK (release)
+        working-directory: apps/mobile
+        run: flutter build apk --release
+
+      - name: Build Android App Bundle (release)
+        working-directory: apps/mobile
+        run: flutter build appbundle --release
+
+      - name: Verify artifacts
+        id: verify
+        run: |
+          APK_SHA=""
+          AAB_SHA=""
+          if [[ -s "apps/mobile/build/app/outputs/flutter-apk/app.apk" ]]; then
+            APK_SHA=$(sha256sum apps/mobile/build/app/outputs/flutter-apk/app.apk | cut -d' ' -f1)
+            echo "  ✓ APK: $(du -h apps/mobile/build/app/outputs/flutter-apk/app.apk | cut -f1)"
+          fi
+          if [[ -s "apps/mobile/build/app/outputs/bundle/release/app-release.aab" ]]; then
+            AAB_SHA=$(sha256sum apps/mobile/build/app/outputs/bundle/release/app-release.aab | cut -d' ' -f1)
+            echo "  ✓ AAB: $(du -h apps/mobile/build/app/outputs/bundle/release/app-release.aab | cut -f1)"
+          fi
+          echo "apk-sha=$APK_SHA" >> "$GITHUB_OUTPUT"
+          echo "aab-sha=$AAB_SHA" >> "$GITHUB_OUTPUT"
+
+      - name: Upload release APK
+        if: steps.verify.outputs.apk-sha != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: may-release-apk-${{ github.sha }}
+          path: apps/mobile/build/app/outputs/flutter-apk/app.apk
+          retention-days: 90
+
+      - name: Upload release AAB
+        if: steps.verify.outputs.aab-sha != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: may-release-aab-${{ github.sha }}
+          path: apps/mobile/build/app/outputs/bundle/release/app-release.aab
+          retention-days: 90
+
+  # ===========================================================
+  # iOS build — unsigned artifact on macOS runner
+  # ===========================================================
+  build-ios:
+    name: Build iOS Release (unsigned)
+    needs: [quality-gates]
+    if: always() && needs.quality-gates.result == 'success' && runner.os == 'macOS'
+    runs-on: macos-latest
+    steps:
+      - name: Checkout exact main commit
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.x'
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        working-directory: apps/mobile
+        run: flutter pub get
+
+      - name: Build unsigned iOS app
+        working-directory: apps/mobile
+        run: flutter build ios --release --no-codesign
+
+      - name: Upload .app artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: may-ios-unsigned-${{ github.sha }}
+          path: apps/mobile/build/ios/iphoneos/Runner.app
+          retention-days: 14
+          if-no-files-found: warning
+
+      - name: Report signing status
+        run: |
+          PROFILE=$(find "$HOME" -name "*.mobileprovision" 2>/dev/null | head -1 || true)
+          if [[ -z "$PROFILE" ]]; then
+            echo "⚠ Code-signing unavailable — published artifacts are unsigned." >&2
+            echo "  **PREREQUISITE:** Add FLUTTER_IOS_PROVISIONING_PROFILE and FLUTTER_IOS_CERTIFICATE secrets." >&2
+          fi
+
+  # ===========================================================
+  # Version calculation and tag creation
+  # STRICTLY after all quality gates pass
+  # ===========================================================
+  calculate-version:
+    name: Calculate Version
+    needs: [quality-gates, build-android]
+    if: |
+      always() &&
+      needs.quality-gates.result == 'success' &&
+      needs.build-android.result == 'success'
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.calc.outputs.version }}
+      skip: ${{ steps.calc.outputs.skip }}
+    steps:
+      - name: Checkout exact main commit
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      # Deduplicate: if version already exists as tag, skip release.
+      - name: Check for existing tag
+        id: dedup
+        run: |
+          VERSION=$(CI_ROOT=. scripts/ci/calculate-version.sh 2>/dev/null || echo "SKIP")
+          if [[ "$VERSION" == "SKIP" ]]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::No release-worthy changes detected."
+            exit 0
+          fi
+
+          # Does this tag already exist? (idempotency check)
+          if git rev-parse "refs/tags/$VERSION" &>/dev/null; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::Release $VERSION already exists — skipping duplicate."
+            exit 0
+          fi
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "::notice::Next version: $VERSION"
+
+      - name: Calculate version (fallback)
+        id: calc
+        if: steps.dedup.outputs.skip != 'true'
+        run: |
+          VERSION=$(CI_ROOT=. scripts/ci/calculate-version.sh) || {
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          }
+          # Validate semver format.
+          if ! echo "$VERSION" | grep -qP '^v\d+\.\d+\.\d+$'; then
+            echo "ERROR: invalid version $VERSION (expected vX.Y.Z)" >&2
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "::notice::Version: $VERSION"
+
+      # Create the tag.
+      - name: Create immutable release tag
+        if: steps.calc.outputs.version != ''
+        run: |
+          VERSION="${{ steps.calc.outputs.version }}"
+          git config user.name "GitHub Actions"
+          git config user.email "<EMAIL>"
+          git tag -a "$VERSION" -m "Release $VERSION ($(date +%Y-%m-%d))" || {
+            echo "::error::Failed to create tag $VERSION (already exists or permission denied)" >&2
+            exit 1
+          }
+          git push origin "$VERSION" || {
+            echo "::error::Failed to push tag $VERSION" >&2
+            exit 1
+          }
+          echo "Tagged and pushed $VERSION"
+
+  # ===========================================================
+  # Professional release notes
+  # ===========================================================
+  generate-notes:
+    name: Generate Release Notes
+    needs: [calculate-version]
+    if: always() && steps.calc.outputs.skip != 'true' && steps.calc.outputs.version != ''
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.notes.outputs.version }}
+      notes-path: ${{ steps.notes.outputs.path }}
+    steps:
+      - name: Checkout exact main commit
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Determine previous tag for diff
+        id: prev-tag
+        run: |
+          PREV=$(git describe --tags --abbrev=0 ${{ steps.calc.outputs.version }}^ 2>/dev/null || true)
+          if [[ -n "$PREV" ]]; then
+            echo "tag=$PREV" >> "$GITHUB_OUTPUT"
+          else
+            FIRST=$(git rev-list --max-parents=0 HEAD | head -1)
+            echo "tag=$FIRST" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Generate professional release notes
+        id: notes
+        env:
+          VERSION: ${{ steps.calc.outputs.version }}
+        run: |
+          NOTES_FILE="release-notes-${{ steps.calc.outputs.version }}.md"
+          CI_ROOT=. scripts/ci/generate-release-notes.sh > "$NOTES_FILE" 2>/dev/null || {
+            # Fallback: generate minimal notes.
+            echo "# ${VERSION}" > "$NOTES_FILE"
+            echo "" >> "$NOTES_FILE"
+            echo "Release Date: $(date +%Y-%m-%d)" >> "$NOTES_FILE"
+            echo "" >> "$NOTES_FILE"
+            echo "## Summary" >> "$NOTES_FILE"
+            echo "" >> "$NOTES_FILE"
+            echo "Release generated automatically by CI. Manual review recommended for first releases." >> "$NOTES_FILE"
+          }
+          echo "version=${{ steps.calc.outputs.version }}" >> "$GITHUB_OUTPUT"
+          echo "path=$NOTES_FILE" >> "$GITHUB_OUTPUT"
+
+      - name: Upload release notes artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-notes-${{ steps.calc.outputs.version }}
+          path: ${{ steps.notes.outputs.path }}
+          retention-days: 90
+
+  # ===========================================================
+  # Create GitHub Release — STRICTLY after all checks pass
+  # ===========================================================
+  create-release:
+    name: Create GitHub Release
+    needs: [calculate-version, generate-notes]
+    if: |
+      always() &&
+      steps.calc.outputs.version != ''
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact main commit (provenance)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      # Download all release artifacts.
+      - name: Download release APK
+        uses: actions/download-artifact@v4
+        with:
+          name: may-release-apk-${{ github.sha }}
+          path: dist/apk
+
+      - name: Download release AAB
+        uses: actions/download-artifact@v4
+        with:
+          name: may-release-aab-${{ github.sha }}
+          path: dist/aab
+
+      - name: Verify commit provenance matches validated build
+        run: |
+          BUILD_COMMIT=$(git rev-parse HEAD)
+          echo "Release artifacts built from: $BUILD_COMMIT"
+          # Cross-check: ensure the tag points to this commit.
+          TAG_COMMIT=$(git rev-list -1 "${{ steps.calc.outputs.version }}")
+          if [[ "$BUILD_COMMIT" != "$TAG_COMMIT" ]]; then
+            echo "ERROR: commit provenance mismatch!" >&2
+            echo "  Build:   $BUILD_COMMIT" >&2
+            echo "  Tag:     $TAG_COMMIT" >&2
+            exit 1
+          fi
+          echo "✓ Commit provenance verified."
+
+      # Create the GitHub Release via gh CLI.
+      - name: Create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.calc.outputs.version }}
+          NOTES_FILE: release-notes-${{ steps.calc.outputs.version }}.md
+        run: |
+          # Use the generated notes if available; otherwise generate minimal notes.
+          if [[ -s "$NOTES_FILE" ]]; then
+            BODY=$(cat "$NOTES_FILE")
+          else
+            BODY="Release $VERSION — automated release."
+          fi
+
+          gh release create \
+            "$VERSION" \
+            --target main \
+            --title "Mây Family Finance $VERSION" \
+            --generate-notes \
+            --verify-tag || {
+            echo "::error::Failed to create GitHub Release (retrying without generate-notes)" >&2
+            # Retry: if auto-generated notes conflict with uploaded notes.
+            gh release create \
+              "$VERSION" \
+              --target main \
+              --title "Mây Family Finance $VERSION" \
+              -F "$NOTES_FILE" \
+              --verify-tag || {
+              echo "::error::GitHub Release creation failed (possibly already created by concurrent run)" >&2
+              exit 0  # idempotent: existing release is not a failure.
+            }
+          }
+
+      - name: Upload APK asset
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.calc.outputs.version }}
+        run: |
+          if [[ -f "dist/apk/app.apk" ]]; then
+            gh release upload "$VERSION" dist/apk/app.apk --clobber || \
+              echo "::warning::APK asset upload failed (may have been uploaded by concurrent run)"
+          fi
+
+      - name: Upload AAB asset
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.calc.outputs.version }}
+        run: |
+          if [[ -f "dist/aab/app-release.aab" ]]; then
+            gh release upload "$VERSION" dist/aab/app-release.aab --clobber || \
+              echo "::warning::AAB asset upload failed (may have been uploaded by concurrent run)"
+          fi
+
+      # Publish the final release summary.
+      - name: Publish release summary
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.calc.outputs.version }}
+        run: |
+          echo "**🚀 Mây Family Finance ${VERSION} Published**" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Tag:** [\`${VERSION}\`](https://github.com/OWNER/MAY/tag/${VERSION})" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Release:** https://github.com/OWNER/MAY/releases/tag/${VERSION}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Commit:** \`${{ github.sha::8}}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Date:** $(date +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Check | Status |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|-------|--------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Quality Gates | ✅ Passed |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Android Build | ✅ APK + AAB |" >> "$GITHUB_STEP_SUMMARY"
+
+  # ===========================================================
+  # Failure notification — always runs if anything failed
+  # ===========================================================
+  release-failure-check:
+    name: Release Safety Check
+    needs: [quality-gates, build-android]
+    if: always() && (needs.quality-gates.result != 'success' || needs.build-android.result != 'success')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Report release safety failure
+        run: |
+          echo "**⚠️ Release aborted — safety checks did not pass**" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Check | Status |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|-------|--------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Quality Gates | ${{ needs.quality-gates.result == 'success' && '✅ Pass' || '❌ FAIL — release blocked' }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Android Build | ${{ needs.build-android.result == 'success' && '✅ Pass' || '❌ FAIL — release blocked' }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "**No tag created. No GitHub Release published.** Fix failures and re-push to main."

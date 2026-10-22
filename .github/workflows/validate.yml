@@ -1,7 +1,9 @@
-# Mây Family Finance — CI Validation Pipeline
-# Phase 0: lint, typecheck, unit tests, emulator integration
+# DEPRECATED — superseded by branch-ci.yml and main-release.yml (2026-10-22).
+# Do not add new CI logic here. For Branch CI use `.github/workflows/branch-ci.yml`.
+# For Main Release use `.github/workflows/main-release.yml`.
+# This file is retained as a reference for the original Phase 0 pipeline.
 
-name: validate
+name: validate (deprecated)
 
 on:
   push:

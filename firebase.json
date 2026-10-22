@@ -1,0 +1,43 @@
+{
+  "emulators": {
+    "auth": {
+      "port": 9099,
+      "seedFromEnv": false
+    },
+    "functions": {
+      "port": 5001,
+      "rules": {
+        "node": "firebase-functions"
+      }
+    },
+    "firestore": {
+      "port": 8080
+    },
+    "database": {
+      "port": 9000,
+      "rules": "docs/firebase/database.rules.json"
+    },
+    "storage": {
+      "port": 9199,
+      "rules": "docs/firebase/storage.rules"
+    },
+    "ui": {
+      "enabled": true,
+      "port": 4000
+    }
+  },
+  "functions": {
+    "source": "functions",
+    "runtime": "nodejs20",
+    "predeploy": [
+      "npm --prefix \"$RESOURCE_DIR\" run build"
+    ],
+    "regions": ["asia-east1"]
+  },
+  "database": {
+    "rules": "docs/firebase/database.rules.json"
+  },
+  "storage": {
+    "rules": "docs/firebase/storage.rules"
+  }
+}
