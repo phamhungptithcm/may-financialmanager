@@ -56,8 +56,7 @@ class _HouseholdSetupScreenState extends State<HouseholdSetupScreen> {
       );
       if (mounted) context.go('/onboarding/accounts');
     } catch (_) {
-      if (mounted)
-        setState(() => _error = 'Đã xảy ra lỗi khi tạo hộ gia đình.');
+      if (mounted) setState(() => _error = 'Đã xảy ra lỗi khi tạo hộ gia đình.');
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -75,8 +74,7 @@ class _HouseholdSetupScreenState extends State<HouseholdSetupScreen> {
           slivers: [
             SliverAppBar(
               backgroundColor: canvas,
-              title: MayText('Thiết lập hộ gia đình',
-                  style: MayTypography.titleMedium(context)),
+              title: MayText('Thiết lập hộ gia đình', style: MayTypography.titleMedium(context)),
               centerTitle: true,
               pinned: true,
               automaticallyImplyLeading: false,
@@ -87,8 +85,7 @@ class _HouseholdSetupScreenState extends State<HouseholdSetupScreen> {
                   children: [
                     GestureDetector(
                       onTap: () => context.pop(),
-                      child: Icon(Icons.arrow_back_ios_new_rounded,
-                          size: 20, color: MayColors.secondary),
+                      child: Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: MayColors.secondary),
                     ),
                     SizedBox(width: MaySpacing.s8),
                   ],
@@ -108,12 +105,9 @@ class _HouseholdSetupScreenState extends State<HouseholdSetupScreen> {
                         children: [
                           Row(
                             children: [
-                              MayText('Tên hộ gia đình',
-                                  style: MayTypography.bodyMedium(context)),
+                              MayText('Tên hộ gia đình', style: MayTypography.bodyMedium(context)),
                               SizedBox(width: MaySpacing.s4),
-                              Text('*',
-                                  style: TextStyle(
-                                      color: MayColors.danger, fontSize: 16)),
+                              Text('*', style: TextStyle(color: MayColors.danger, fontSize: 16)),
                             ],
                           ),
                           const SizedBox(height: MaySpacing.s8),
@@ -142,9 +136,7 @@ class _HouseholdSetupScreenState extends State<HouseholdSetupScreen> {
                                 Text(
                                   '${_nameCtrl.text.length}/50',
                                   style: TextStyle(
-                                    color: _nameCtrl.text.length > 50
-                                        ? MayColors.danger
-                                        : MayColors.secondary,
+                                    color: _nameCtrl.text.length > 50 ? MayColors.danger : MayColors.secondary,
                                     fontSize: 12,
                                   ),
                                 ),
@@ -165,20 +157,14 @@ class _HouseholdSetupScreenState extends State<HouseholdSetupScreen> {
                         children: [
                           Row(
                             children: [
-                              MayText('Tiền tệ',
-                                  style: MayTypography.bodyMedium(context)),
+                              MayText('Tiền tệ', style: MayTypography.bodyMedium(context)),
                               SizedBox(width: MaySpacing.s4),
-                              Text('*',
-                                  style: TextStyle(
-                                      color: MayColors.danger, fontSize: 16)),
+                              Text('*', style: TextStyle(color: MayColors.danger, fontSize: 16)),
                             ],
                           ),
                           const SizedBox(height: MaySpacing.s8),
                           MaySegmentedControl<HouseholdCurrency>(
-                            options: {
-                              HouseholdCurrency.vnd: 'VND',
-                              HouseholdCurrency.usd: 'USD'
-                            },
+                            options: {HouseholdCurrency.vnd: 'VND', HouseholdCurrency.usd: 'USD'},
                             selected: _currency,
                             onChanged: (v) => setState(() => _currency = v),
                           ),
@@ -194,28 +180,21 @@ class _HouseholdSetupScreenState extends State<HouseholdSetupScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          MayText('Múi giờ',
-                              style: MayTypography.bodyMedium(context)),
+                          MayText('Múi giờ', style: MayTypography.bodyMedium(context)),
                           SizedBox(height: MaySpacing.s8),
                           GestureDetector(
                             onTap: () {},
                             child: Container(
-                              padding: EdgeInsets.symmetric(
-                                  horizontal: MaySpacing.s16, vertical: 14.0),
+                              padding: EdgeInsets.symmetric(horizontal: MaySpacing.s16, vertical: 14.0),
                               decoration: BoxDecoration(
                                 color: MayColors.inputFill,
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Flexible(
-                                      child: Text(_timezone,
-                                          style:
-                                              const TextStyle(fontSize: 16))),
-                                  Icon(Icons.edit_outlined,
-                                      size: 20, color: MayColors.secondary),
+                                  Flexible(child: Text(_timezone, style: const TextStyle(fontSize: 16))),
+                                  Icon(Icons.edit_outlined, size: 20, color: MayColors.secondary),
                                 ],
                               ),
                             ),
@@ -235,13 +214,9 @@ class _HouseholdSetupScreenState extends State<HouseholdSetupScreen> {
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.error_outline,
-                              size: 20, color: MayColors.danger),
+                          Icon(Icons.error_outline, size: 20, color: MayColors.danger),
                           SizedBox(width: MaySpacing.s8),
-                          Expanded(
-                              child: MayText(_error!,
-                                  style: TextStyle(
-                                      color: MayColors.danger, fontSize: 14))),
+                          Expanded(child: MayText(_error!, style: TextStyle(color: MayColors.danger, fontSize: 14))),
                         ],
                       ),
                     ),

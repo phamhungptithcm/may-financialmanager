@@ -31,8 +31,7 @@ class MayToast {
         backgroundColor: bgColor,
         duration: duration,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(MayRadius.s8)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(MayRadius.s8)),
         // Accessibility: announces message via TalkBack/VoiceOver.
       ),
     );

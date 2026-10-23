@@ -110,8 +110,7 @@ final class Money {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is Money && minor == other.minor && currency == other.currency;
+      identical(this, other) || other is Money && minor == other.minor && currency == other.currency;
 
   @override
   int get hashCode => Object.hash(minor, currency);
@@ -185,8 +184,7 @@ final class Money {
   }
 
   /// Returns a copy with [newMinor] replacing the minor unit.
-  Money copyWith({int? newMinor}) =>
-      Money(minor: newMinor ?? minor, currency: currency);
+  Money copyWith({int? newMinor}) => Money(minor: newMinor ?? minor, currency: currency);
 
   // -- Constants --
 

@@ -59,13 +59,11 @@ abstract final class MayColors {
   // -- State-aware wrappers (Material 3 compatible) --
 
   /// Returns a [WidgetStateProperty] resolving to [accent] in all states.
-  static WidgetStateProperty<Color?> accentColor() =>
-      WidgetStatePropertyAll(accent);
+  static WidgetStateProperty<Color?> accentColor() => WidgetStatePropertyAll(accent);
 
   /// Returns a [WidgetStateProperty] resolving to [danger] when pressed,
   /// [disabled] when disabled, [primary] otherwise.
-  static WidgetStateProperty<Color?> primaryColor({Color? light}) =>
-      _PrimaryColorState(light ?? primary);
+  static WidgetStateProperty<Color?> primaryColor({Color? light}) => _PrimaryColorState(light ?? primary);
 
   // -- Dark-mode overrides (approximate WCAG AA-safe) --
   // TODO: validate against prototype dark CSS after FigJam export review.

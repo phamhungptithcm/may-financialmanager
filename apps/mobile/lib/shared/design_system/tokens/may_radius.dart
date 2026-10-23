@@ -30,16 +30,13 @@ abstract final class MayRadius {
   static const circular = BorderRadius.zero;
 
   /// Rounded corner for buttons and small cards.
-  static RoundedRectangleBorder button() =>
-      RoundedRectangleBorder(borderRadius: BorderRadius.circular(s12));
+  static RoundedRectangleBorder button() => RoundedRectangleBorder(borderRadius: BorderRadius.circular(s12));
 
   /// Rounded corner for standard cards.
-  static RoundedRectangleBorder card() =>
-      RoundedRectangleBorder(borderRadius: BorderRadius.circular(s16));
+  static RoundedRectangleBorder card() => RoundedRectangleBorder(borderRadius: BorderRadius.circular(s16));
 
   /// Rounded corner for hero / modal cards.
-  static RoundedRectangleBorder heroCard() =>
-      RoundedRectangleBorder(borderRadius: BorderRadius.circular(s20));
+  static RoundedRectangleBorder heroCard() => RoundedRectangleBorder(borderRadius: BorderRadius.circular(s20));
 
   /// Fully rounded pill shape.
   static RoundedRectangleBorder pill(double height) => RoundedRectangleBorder(

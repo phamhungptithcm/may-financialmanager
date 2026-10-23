@@ -16,8 +16,7 @@ class AppLocalizations {
 
   const AppLocalizations(this.locale);
 
-  static AppLocalizations of(BuildContext context) =>
-      Localizations.of<AppLocalizations>(context, AppLocalizations)!;
+  static AppLocalizations of(BuildContext context) => Localizations.of<AppLocalizations>(context, AppLocalizations)!;
 
   // -- Static lookup helper --
   static AppLocalizations? maybeOf(BuildContext context) =>
@@ -30,39 +29,27 @@ class AppLocalizations {
 
   // -- Keys (Phase 0 coverage) --
 
-  String get onboardingTitle =>
-      locale.languageCode == 'vi' ? 'Chào mừng bạn' : 'Welcome';
+  String get onboardingTitle => locale.languageCode == 'vi' ? 'Chào mừng bạn' : 'Welcome';
 
-  String get signInWithGoogle => locale.languageCode == 'vi'
-      ? 'Đăng nhập với Google'
-      : 'Sign in with Google';
+  String get signInWithGoogle => locale.languageCode == 'vi' ? 'Đăng nhập với Google' : 'Sign in with Google';
 
-  String get signInWithApple => locale.languageCode == 'vi'
-      ? 'Đăng nhập với Apple'
-      : 'Sign in with Apple';
+  String get signInWithApple => locale.languageCode == 'vi' ? 'Đăng nhập với Apple' : 'Sign in with Apple';
 
-  String get createHousehold => locale.languageCode == 'vi'
-      ? 'Tạo hộ gia đình mới'
-      : 'Create new household';
+  String get createHousehold => locale.languageCode == 'vi' ? 'Tạo hộ gia đình mới' : 'Create new household';
 
-  String get householdName =>
-      locale.languageCode == 'vi' ? 'Tên hộ gia đình' : 'Household name';
+  String get householdName => locale.languageCode == 'vi' ? 'Tên hộ gia đình' : 'Household name';
 
   String get currency => locale.languageCode == 'vi' ? 'Tiền tệ' : 'Currency';
 
   String get homeTabLabel => locale.languageCode == 'vi' ? 'Trang chủ' : 'Home';
 
-  String get transactionsTabLabel =>
-      locale.languageCode == 'vi' ? 'Giao dịch' : 'Transactions';
+  String get transactionsTabLabel => locale.languageCode == 'vi' ? 'Giao dịch' : 'Transactions';
 
-  String get analyticsTabLabel =>
-      locale.languageCode == 'vi' ? 'Báo cáo' : 'Reports';
+  String get analyticsTabLabel => locale.languageCode == 'vi' ? 'Báo cáo' : 'Reports';
 
-  String get wealthTabLabel =>
-      locale.languageCode == 'vi' ? 'Tài sản' : 'Wealth';
+  String get wealthTabLabel => locale.languageCode == 'vi' ? 'Tài sản' : 'Wealth';
 
-  String get settingsTabLabel =>
-      locale.languageCode == 'vi' ? 'Cá nhân' : 'Settings';
+  String get settingsTabLabel => locale.languageCode == 'vi' ? 'Cá nhân' : 'Settings';
 
   // -- Common action labels --
   String get save => locale.languageCode == 'vi' ? 'Lưu' : 'Save';
@@ -75,16 +62,12 @@ class AppLocalizations {
   String get retry => locale.languageCode == 'vi' ? 'Thử lại' : 'Retry';
 
   // -- State labels --
-  String get loading =>
-      locale.languageCode == 'vi' ? 'Đang tải...' : 'Loading...';
-  String get submitting =>
-      locale.languageCode == 'vi' ? 'Đang gửi...' : 'Submitting...';
-  String get syncing =>
-      locale.languageCode == 'vi' ? 'Đang đồng bộ' : 'Syncing...';
+  String get loading => locale.languageCode == 'vi' ? 'Đang tải...' : 'Loading...';
+  String get submitting => locale.languageCode == 'vi' ? 'Đang gửi...' : 'Submitting...';
+  String get syncing => locale.languageCode == 'vi' ? 'Đang đồng bộ' : 'Syncing...';
 
   // -- Empty / error states --
-  String get emptyStateTitle =>
-      locale.languageCode == 'vi' ? 'Chưa có dữ liệu' : 'No data yet';
+  String get emptyStateTitle => locale.languageCode == 'vi' ? 'Chưa có dữ liệu' : 'No data yet';
 
   String get errorStateTitle => locale.languageCode == 'vi' ? 'Lỗi' : 'Error';
 
@@ -108,8 +91,7 @@ class AppLocalizations {
   }
 }
 
-class _AppLocalizationsDelegate
-    extends LocalizationsDelegate<AppLocalizations> {
+class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
 
   @override
@@ -118,8 +100,7 @@ class _AppLocalizationsDelegate
   }
 
   @override
-  bool isSupported(Locale locale) =>
-      locale.languageCode == 'vi' || locale.languageCode == 'en';
+  bool isSupported(Locale locale) => locale.languageCode == 'vi' || locale.languageCode == 'en';
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;

@@ -75,8 +75,7 @@ class MayButton extends StatefulWidget {
   State<MayButton> createState() => _MayButtonState();
 }
 
-class _MayButtonState extends State<MayButton>
-    with SingleTickerProviderStateMixin {
+class _MayButtonState extends State<MayButton> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   bool _pressed = false;
@@ -114,8 +113,8 @@ class _MayButtonState extends State<MayButton>
   @override
   Widget build(BuildContext context) {
     final disabled = widget.onPressed == null || widget.isLoading;
-    final isReducedMotion = MediaQuery.platformBrightnessOf(context) ==
-        Brightness.dark; // Placeholder — read from mayTheme in Phase 1.
+    final isReducedMotion =
+        MediaQuery.platformBrightnessOf(context) == Brightness.dark; // Placeholder — read from mayTheme in Phase 1.
 
     return AnimatedBuilder(
       animation: _controller,
@@ -131,16 +130,13 @@ class _MayButtonState extends State<MayButton>
             child: InkWell(
               onTap: disabled ? null : _safeOnPressed,
               borderRadius: BorderRadius.circular(16),
-              splashFactory:
-                  NoSplash.splashFactory, // Custom splash handled below
+              splashFactory: NoSplash.splashFactory, // Custom splash handled below
               child: Container(
                 constraints: BoxConstraints(
-                  minWidth: widget.minWidth ??
-                      (widget.variant == MayButtonVariant.text ? 0 : 120),
+                  minWidth: widget.minWidth ?? (widget.variant == MayButtonVariant.text ? 0 : 120),
                   maxWidth: widget.maxWidth ?? double.infinity,
                 ),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
                 decoration: _decoration(disabled: disabled),
                 child: _content(context, isReducedMotion: isReducedMotion),
               ),
@@ -166,8 +162,7 @@ class _MayButtonState extends State<MayButton>
         );
       case MayButtonVariant.tertiary:
         return BoxDecoration(
-          color:
-              disabled ? MayColors.surface : MayColors.accent.withOpacity(0.1),
+          color: disabled ? MayColors.surface : MayColors.accent.withOpacity(0.1),
           borderRadius: BorderRadius.circular(16),
         );
       case MayButtonVariant.text:
@@ -200,9 +195,7 @@ class _MayButtonState extends State<MayButton>
         ),
     };
 
-    final hasContent = widget.label.isNotEmpty ||
-        widget.leadingIcon != null ||
-        widget.trailingIcon != null;
+    final hasContent = widget.label.isNotEmpty || widget.leadingIcon != null || widget.trailingIcon != null;
 
     if (!hasContent) return const SizedBox.shrink();
 
@@ -246,8 +239,7 @@ class _MayButtonState extends State<MayButton>
     return SizedBox(
       width: 18,
       height: 18,
-      child: CircularProgressIndicator(
-          strokeWidth: 2, valueColor: AlwaysStoppedAnimation(Colors.white)),
+      child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation(Colors.white)),
     );
   }
 

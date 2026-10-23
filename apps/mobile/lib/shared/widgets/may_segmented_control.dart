@@ -18,8 +18,7 @@ class MaySegmentedControl<T extends Object> extends StatefulWidget {
   State<MaySegmentedControl<T>> createState() => _MaySegmentedControlState<T>();
 }
 
-class _MaySegmentedControlState<T extends Object>
-    extends State<MaySegmentedControl<T>> {
+class _MaySegmentedControlState<T extends Object> extends State<MaySegmentedControl<T>> {
   late T _selected;
 
   @override

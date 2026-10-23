@@ -33,43 +33,16 @@ class MayCard extends StatefulWidget {
 
   // -- Convenience constructors --
 
-  factory MayCard.elevated(
-      {Key? key,
-      required Widget child,
-      VoidCallback? onTap,
-      EdgeInsetsGeometry? margin}) {
-    return MayCard(
-        key: key,
-        child: child,
-        variant: MayCardVariant.elevated,
-        onTap: onTap,
-        margin: margin);
+  factory MayCard.elevated({Key? key, required Widget child, VoidCallback? onTap, EdgeInsetsGeometry? margin}) {
+    return MayCard(key: key, child: child, variant: MayCardVariant.elevated, onTap: onTap, margin: margin);
   }
 
-  factory MayCard.flat(
-      {Key? key,
-      required Widget child,
-      VoidCallback? onTap,
-      EdgeInsetsGeometry? margin}) {
-    return MayCard(
-        key: key,
-        child: child,
-        variant: MayCardVariant.flat,
-        onTap: onTap,
-        margin: margin);
+  factory MayCard.flat({Key? key, required Widget child, VoidCallback? onTap, EdgeInsetsGeometry? margin}) {
+    return MayCard(key: key, child: child, variant: MayCardVariant.flat, onTap: onTap, margin: margin);
   }
 
-  factory MayCard.hero(
-      {Key? key,
-      required Widget child,
-      VoidCallback? onTap,
-      EdgeInsetsGeometry? margin}) {
-    return MayCard(
-        key: key,
-        child: child,
-        variant: MayCardVariant.hero,
-        onTap: onTap,
-        margin: margin);
+  factory MayCard.hero({Key? key, required Widget child, VoidCallback? onTap, EdgeInsetsGeometry? margin}) {
+    return MayCard(key: key, child: child, variant: MayCardVariant.hero, onTap: onTap, margin: margin);
   }
 }
 
@@ -122,10 +95,7 @@ class _MayCardState extends State<MayCard> with SingleTickerProviderStateMixin {
             child: InkWell(
               onTap: widget.onTap,
               borderRadius: BorderRadius.circular(radius),
-              child: Padding(
-                  padding:
-                      widget.margin ?? const EdgeInsets.all(MaySpacing.s16),
-                  child: child!),
+              child: Padding(padding: widget.margin ?? const EdgeInsets.all(MaySpacing.s16), child: child!),
             ),
           ),
         );

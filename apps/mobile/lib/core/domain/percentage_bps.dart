@@ -52,8 +52,7 @@ final class PercentageBps {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is PercentageBps && basisPoints == other.basisPoints;
+      identical(this, other) || other is PercentageBps && basisPoints == other.basisPoints;
 
   @override
   int get hashCode => basisPoints;
@@ -113,8 +112,7 @@ final class ThresholdSet {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ThresholdSet && listEquals(thresholds, other.thresholds);
+      identical(this, other) || other is ThresholdSet && listEquals(thresholds, other.thresholds);
 
   @override
   int get hashCode => Object.hashAll(thresholds.map((t) => t.basisPoints));

@@ -8,8 +8,7 @@ import 'package:may/shared/design_system/tokens/may_colors.dart';
 
 /// App-wide theme token extension.
 extension MayThemeExtension on BuildContext {
-  MayThemeData get mayTheme =>
-      throw UnimplementedError('Use MayThemeExtension.of(context)');
+  MayThemeData get mayTheme => throw UnimplementedError('Use MayThemeExtension.of(context)');
 }
 
 /// Theme data combining all design tokens for a single theme variant.
@@ -31,8 +30,7 @@ class MayThemeData {
   Color get primaryText => isDark ? MayColors.primaryDark : MayColors.primary;
 
   /// Secondary text colour.
-  Color get secondaryText =>
-      isDark ? MayColors.secondaryDark : MayColors.secondary;
+  Color get secondaryText => isDark ? MayColors.secondaryDark : MayColors.secondary;
 
   /// Accent colour (CTAs, links, positive actions).
   Color get accent => isDark ? MayColors.accentDark : MayColors.accent;

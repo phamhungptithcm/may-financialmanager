@@ -82,8 +82,7 @@ class _MayMoneyFieldState extends State<MayMoneyField> {
     // Prevent overflow for safe integer range.
     if (parsed.abs() > 9007199254740991) return; // near MAX_SAFE_INTEGER
 
-    final money =
-        parsed == 0 ? null : Money(minor: parsed, currency: widget.currency);
+    final money = parsed == 0 ? null : Money(minor: parsed, currency: widget.currency);
     widget.onChanged(money);
   }
 
@@ -98,8 +97,7 @@ class _MayMoneyFieldState extends State<MayMoneyField> {
       hintText: widget.hintText ?? '0',
       keyboardType: TextInputType.number,
       inputFormatters: [
-        FilteringTextInputFormatter.allow(
-            RegExp(r'^-?\d{0,15}')), // 15 digit max
+        FilteringTextInputFormatter.allow(RegExp(r'^-?\d{0,15}')), // 15 digit max
         NumericInputFormatter(),
       ],
       textStyle: widget.textStyle ?? MayTypography.moneyTabular(context),

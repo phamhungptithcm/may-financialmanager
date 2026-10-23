@@ -76,8 +76,7 @@ class MayIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveIconColor =
-        iconColor ?? Theme.of(context).colorScheme.onSurface;
+    final effectiveIconColor = iconColor ?? Theme.of(context).colorScheme.onSurface;
     final effectiveSize = size!;
 
     return Tooltip(
@@ -112,9 +111,7 @@ class MayIconButton extends StatelessWidget {
         );
       case IconButtonVariant.outlined:
         return BoxDecoration(
-          border: Border.all(
-              color:
-                  fillColor ?? theme.dividerTheme.color ?? MayColors.divider),
+          border: Border.all(color: fillColor ?? theme.dividerTheme.color ?? MayColors.divider),
           shape: BoxShape.circle,
         );
       case IconButtonVariant.text:

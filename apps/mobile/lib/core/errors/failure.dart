@@ -124,8 +124,7 @@ final class Success<T, F extends Failure> extends Result<T, F> {
   T get orThrow => value;
 
   @override
-  R mapFailure<R>(R Function(F failure) onFailure) =>
-      throw StateError('Cannot mapFailure on Success');
+  R mapFailure<R>(R Function(F failure) onFailure) => throw StateError('Cannot mapFailure on Success');
 }
 
 /// A failed Result containing a [Failure].

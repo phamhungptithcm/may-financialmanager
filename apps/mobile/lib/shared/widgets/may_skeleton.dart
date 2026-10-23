@@ -26,16 +26,14 @@ class MaySkeleton extends StatefulWidget {
 
 enum MaySkeletonShape { rect, circle, pill }
 
-class _MaySkeletonState extends State<MaySkeleton>
-    with SingleTickerProviderStateMixin {
+class _MaySkeletonState extends State<MaySkeleton> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
 
   @override
   void initState() {
     super.initState();
-    final reducedMotion =
-        MediaQuery.platformBrightnessOf(context) == Brightness.dark;
+    final reducedMotion = MediaQuery.platformBrightnessOf(context) == Brightness.dark;
     _controller = AnimationController(
       duration: MayMotion.shimmerCycle,
       vsync: this,
@@ -55,9 +53,7 @@ class _MaySkeletonState extends State<MaySkeleton>
   @override
   Widget build(BuildContext context) {
     final baseColor = widget.color ?? MayColors.skeletonBase;
-    final highlightColor = widget.color != null
-        ? widget.color!.withOpacity(0.8)
-        : MayColors.skeletonHighlight;
+    final highlightColor = widget.color != null ? widget.color!.withOpacity(0.8) : MayColors.skeletonHighlight;
 
     // Under reduced motion, show a static placeholder with no shimmer.
     return AnimatedBuilder(

@@ -68,9 +68,7 @@ class _SignInScreenState extends State<SignInScreen> {
   @override
   Widget build(BuildContext context) {
     final isIOS = Platform.isIOS;
-    final bg = Theme.of(context).brightness == Brightness.dark
-        ? MayColors.canvasDark
-        : MayColors.canvas;
+    final bg = Theme.of(context).brightness == Brightness.dark ? MayColors.canvasDark : MayColors.canvas;
 
     return Scaffold(
       backgroundColor: bg,
@@ -88,19 +86,16 @@ class _SignInScreenState extends State<SignInScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.family_restroom_rounded,
-                            size: 64, color: MayColors.accent),
+                        Icon(Icons.family_restroom_rounded, size: 64, color: MayColors.accent),
                         const SizedBox(height: MaySpacing.s16),
                         MayText(
                           'Quản lý chi tiêu gia đình',
-                          style: MayTypography.displayMedium(context,
-                              color: MayColors.primary),
+                          style: MayTypography.displayMedium(context, color: MayColors.primary),
                         ),
                         const SizedBox(height: MaySpacing.s8),
                         MayText(
                           'Theo dõi thu nhập, chi tiêu và ngân sách cho cả nhà.',
-                          style: MayTypography.bodyLarge(context,
-                              color: MayColors.secondary),
+                          style: MayTypography.bodyLarge(context, color: MayColors.secondary),
                           textAlign: TextAlign.center,
                         ),
                       ],
@@ -132,20 +127,17 @@ class _SignInScreenState extends State<SignInScreen> {
                             if (_errorMessage != null) ...[
                               MayText(
                                 _errorMessage!,
-                                style: const TextStyle(
-                                    color: MayColors.danger, fontSize: 14),
+                                style: const TextStyle(color: MayColors.danger, fontSize: 14),
                                 textAlign: TextAlign.center,
                               ),
                               const SizedBox(height: MaySpacing.s8),
                             ],
                             Flexible(
                               child: Padding(
-                                padding:
-                                    const EdgeInsets.only(top: MaySpacing.s8),
+                                padding: const EdgeInsets.only(top: MaySpacing.s8),
                                 child: MayText(
                                   'Bằng cách đăng nhập, bạn đồng ý với',
-                                  style: MayTypography.labelSmall(context,
-                                      color: MayColors.secondary),
+                                  style: MayTypography.labelSmall(context, color: MayColors.secondary),
                                   textAlign: TextAlign.center,
                                 ),
                               ),
@@ -153,12 +145,10 @@ class _SignInScreenState extends State<SignInScreen> {
                             const SizedBox(height: MaySpacing.s2),
                             Flexible(
                               child: Padding(
-                                padding: const EdgeInsets.only(
-                                    bottom: MaySpacing.s8),
+                                padding: const EdgeInsets.only(bottom: MaySpacing.s8),
                                 child: MayText(
                                   'Điều khoản dịch vụ và Chính sách bảo mật.',
-                                  style: MayTypography.labelSmall(context,
-                                      color: MayColors.secondary),
+                                  style: MayTypography.labelSmall(context, color: MayColors.secondary),
                                   textAlign: TextAlign.center,
                                 ),
                               ),

@@ -11,8 +11,7 @@ import 'package:firebase_auth/firebase_auth.dart' as fb;
 // -- Feature imports (Phase 1) --
 
 import 'package:may/features/auth/presentation/sign_in_screen.dart' as auth;
-import 'package:may/features/onboarding/presentation/household_setup_screen.dart'
-    as onboarding;
+import 'package:may/features/onboarding/presentation/household_setup_screen.dart' as onboarding;
 
 // -- Route constants (from UI-XXX inventory) --
 
@@ -115,8 +114,7 @@ class MayRouter {
     GoRouterState state,
   ) {
     final isAuthenticated = fb.FirebaseAuth.instance.currentUser != null;
-    final isAuthPath = state.uri.toString().startsWith('/auth') ||
-        state.uri.toString().startsWith('/onboarding');
+    final isAuthPath = state.uri.toString().startsWith('/auth') || state.uri.toString().startsWith('/onboarding');
 
     // Unauthenticated → always show auth screen
     if (!isAuthenticated && !isAuthPath) {
@@ -136,8 +134,7 @@ class MayRouter {
       GoRoute(
         name: 'welcome',
         path: Routes.welcome,
-        builder: (ctx, state) =>
-            const _StubScreen(routeName: 'Welcome (UI-01)'),
+        builder: (ctx, state) => const _StubScreen(routeName: 'Welcome (UI-01)'),
       ),
     );
 
@@ -162,8 +159,7 @@ class MayRouter {
       GoRoute(
         name: 'onboardingAccounts',
         path: Routes.onboardingAccounts,
-        builder: (ctx, state) =>
-            const _StubScreen(routeName: 'Household Accounts (UI-04)'),
+        builder: (ctx, state) => const _StubScreen(routeName: 'Household Accounts (UI-04)'),
       ),
     );
 
@@ -176,32 +172,27 @@ class MayRouter {
           GoRoute(
             name: 'home',
             path: Routes.home,
-            builder: (ctx, state) =>
-                const _StubScreen(routeName: 'Home (UI-05)'),
+            builder: (ctx, state) => const _StubScreen(routeName: 'Home (UI-05)'),
           ),
           GoRoute(
             name: 'transactions',
             path: Routes.transactions,
-            builder: (ctx, state) =>
-                const _StubScreen(routeName: 'Transactions (UI-09)'),
+            builder: (ctx, state) => const _StubScreen(routeName: 'Transactions (UI-09)'),
           ),
           GoRoute(
             name: 'analytics',
             path: Routes.analytics,
-            builder: (ctx, state) =>
-                const _StubScreen(routeName: 'Analytics (UI-20)'),
+            builder: (ctx, state) => const _StubScreen(routeName: 'Analytics (UI-20)'),
           ),
           GoRoute(
             name: 'wealth',
             path: Routes.wealth,
-            builder: (ctx, state) =>
-                const _StubScreen(routeName: 'Wealth (UI-29)'),
+            builder: (ctx, state) => const _StubScreen(routeName: 'Wealth (UI-29)'),
           ),
           GoRoute(
             name: 'settings',
             path: Routes.settings,
-            builder: (ctx, state) =>
-                const _StubScreen(routeName: 'Settings (UI-40)'),
+            builder: (ctx, state) => const _StubScreen(routeName: 'Settings (UI-40)'),
           ),
         ],
       ),

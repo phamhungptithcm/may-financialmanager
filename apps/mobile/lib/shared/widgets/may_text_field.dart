@@ -117,8 +117,7 @@ class _MayTextFieldState extends State<MayTextField> {
           decoration: InputDecoration(
             hintText: widget.hintText,
             filled: true,
-            fillColor:
-                _hasFocus ? theme.colorScheme.surface : MayColors.inputFill,
+            fillColor: _hasFocus ? theme.colorScheme.surface : MayColors.inputFill,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide(
@@ -146,8 +145,7 @@ class _MayTextFieldState extends State<MayTextField> {
               borderRadius: BorderRadius.circular(8),
               borderSide: const BorderSide(color: MayColors.danger, width: 1.5),
             ),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           ),
           onChanged: (value) {
             _validate(value);
@@ -162,8 +160,7 @@ class _MayTextFieldState extends State<MayTextField> {
           const SizedBox(height: 4),
           Text(
             _errorText!,
-            style: MayTypography.labelSmall(context)
-                .copyWith(color: MayColors.danger),
+            style: MayTypography.labelSmall(context).copyWith(color: MayColors.danger),
           ),
         ],
       ],

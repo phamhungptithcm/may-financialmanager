@@ -66,8 +66,7 @@ enum Period {
 /// Converts a [date] from any timezone to the target UTC offset string.
 /// If [tz] is null, defaults to Asia/Ho_Chi_Minh (UTC+7).
 DateTime applyTimezone(DateTime date, [String? tz]) {
-  if (tz == null || tz.isEmpty)
-    return date.toUtc().add(const Duration(hours: 7));
+  if (tz == null || tz.isEmpty) return date.toUtc().add(const Duration(hours: 7));
 
   // Supported timezones: parse common offset strings.
   switch (tz) {
@@ -113,8 +112,7 @@ final class MonthPeriod {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is MonthPeriod && year == other.year && month == other.month;
+      identical(this, other) || other is MonthPeriod && year == other.year && month == other.month;
 
   @override
   int get hashCode => Object.hash(year, month);

@@ -73,8 +73,7 @@ class MayProgressBar extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             'Vượt $used - target $target',
-            style: MayTypography.labelSmall(context)
-                .copyWith(color: MayColors.danger),
+            style: MayTypography.labelSmall(context).copyWith(color: MayColors.danger),
           ),
         ],
       ],

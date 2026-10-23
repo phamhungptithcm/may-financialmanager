@@ -37,11 +37,7 @@ class LocalDate {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is LocalDate &&
-          year == other.year &&
-          month == other.month &&
-          day == other.day;
+      identical(this, other) || other is LocalDate && year == other.year && month == other.month && day == other.day;
 
   @override
   int get hashCode => Object.hash(year, month, day);
@@ -58,8 +54,7 @@ class LocalDate {
   Map<String, dynamic> toJson() => {'year': year, 'month': month, 'day': day};
 
   factory LocalDate.fromJson(Map<String, dynamic> json) {
-    return LocalDate(
-        json['year'] as int, json['month'] as int, json['day'] as int);
+    return LocalDate(json['year'] as int, json['month'] as int, json['day'] as int);
   }
 }
 

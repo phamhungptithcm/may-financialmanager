@@ -50,12 +50,10 @@ abstract final class MayMotion {
   // -- Reduced motion support --
 
   /// Returns the appropriate duration given the user's reduce-motion setting.
-  static Duration adapt(Duration original, {bool reducedMotion = false}) =>
-      reducedMotion ? original * 3 : original;
+  static Duration adapt(Duration original, {bool reducedMotion = false}) => reducedMotion ? original * 3 : original;
 
   /// Returns the appropriate curve given the user's reduce-motion setting.
-  static Curve adaptCurve(Curve original, {bool reducedMotion = false}) =>
-      reducedMotion ? Curves.linear : original;
+  static Curve adaptCurve(Curve original, {bool reducedMotion = false}) => reducedMotion ? Curves.linear : original;
 
   /// Checks if a [Duration] would be considered "essential" motion that
   /// cannot be disabled without harming usability feedback.

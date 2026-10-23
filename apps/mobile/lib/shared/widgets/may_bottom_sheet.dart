@@ -41,10 +41,8 @@ class MayBottomSheet extends StatelessWidget {
     return showModalBottomSheet<T>(
       context: context,
       isScrollControlled: isScrollControlled,
-      barrierColor:
-          dismissible ? Colors.black.withOpacity(0.4) : Colors.transparent,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      barrierColor: dismissible ? Colors.black.withOpacity(0.4) : Colors.transparent,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (ctx) => MayBottomSheet(
         title: title,
         body: body,
@@ -74,8 +72,7 @@ class MayBottomSheet extends StatelessWidget {
                 const Spacer(),
                 InkWell(
                   onTap: dismissible ? () => Navigator.of(context).pop() : null,
-                  child:
-                      Icon(Icons.close, size: 24, color: MayColors.secondary),
+                  child: Icon(Icons.close, size: 24, color: MayColors.secondary),
                 ),
               ],
             ),
@@ -86,9 +83,7 @@ class MayBottomSheet extends StatelessWidget {
           const SizedBox(height: MaySpacing.s16),
 
           // Body.
-          Padding(
-              padding: const EdgeInsets.symmetric(horizontal: MaySpacing.s20),
-              child: body),
+          Padding(padding: const EdgeInsets.symmetric(horizontal: MaySpacing.s20), child: body),
 
           // Primary action.
           if (primaryAction != null) ...[
