@@ -7,11 +7,11 @@
  */
 
 import { onCall, CallableRequest } from 'firebase-functions/v2/https';
-import * as admin from 'firebase-admin';
 import { z } from 'zod';
 import { guardAuth } from '../../../core/auth/auth_context.js';
 import { computeFingerprint, validateFingerprint } from '../../../core/idempotency/idempotency_service.js';
 import { createLogger } from '../../../core/logging/structured_logger.js';
+import { isEmulator, getRTDBURL } from '../../../core/database/index.js';
 
 // -- Zod schemas --
 
@@ -60,6 +60,65 @@ const DEFAULT_CATEGORIES: Array<{ name: string; kind: 'INCOME' | 'EXPENSE' }> = 
   { name: 'OTHER_INCOME', kind: 'INCOME' },
 ];
 
+// -- RTDB REST helpers (emulator mode) --
+
+/** Build a safe RTDB REST path from segments. */
+function rtdbPath(...segments: string[]): string {
+  const baseUrl = getRTDBURL();
+  // Encode each segment to handle @, ., #, etc.
+  const encoded = segments.map(encodeURIComponent).join('/');
+  return `${baseUrl}${encoded}.json?print=silent`;
+}
+
+async function rtdbGet(...segments: string[]): Promise<unknown | null> {
+  if (isEmulator()) {
+    const baseUrl = getRTDBURL();
+    // NOTE: Do NOT use ?print=silent for reads in emulator mode.
+    // The RTDB emulator returns HTTP 204 with empty body for GET+print=silent,
+    // which would be misinterpreted as "not found". Only production servers
+    // correctly honor the spec (return data + 200). For writes we use print=silent
+    // to suppress echo on successful operations.
+    const encoded = segments.map(encodeURIComponent).join('/');
+    const res = await fetch(`${baseUrl}${encoded}.json`);
+    return res.status === 200 ? (await res.json()) : null;
+  }
+  const db = (global as any).__may_rtdb_instance;
+  if (!db) throw new Error('RTDB not initialized in production');
+  const snap = await db.ref(segments.join('/')).once('value');
+  return snap.exists() ? snap.val() : null;
+}
+
+async function rtdbSet(segments: string[], data: unknown): Promise<void> {
+  if (isEmulator()) {
+    const url = `${rtdbPath(...segments)}`;
+    await fetch(url, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return;
+  }
+  const db = (global as any).__may_rtdb_instance;
+  if (!db) throw new Error('RTDB not initialized in production');
+  await db.ref(segments.join('/')).set(data);
+}
+
+async function rtdbUpdate(baseSegments: string[], data: Record<string, unknown>): Promise<void> {
+  if (isEmulator()) {
+    const baseUrl = getRTDBURL();
+    const basePath = baseSegments.map(encodeURIComponent).join('/');
+    await fetch(`${baseUrl}${basePath}.json?print=silent`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return;
+  }
+  const db = (global as any).__may_rtdb_instance;
+  if (!db) throw new Error('RTDB not initialized in production');
+  await db.ref(baseSegments.join('/')).update(data);
+}
+
 // -- Handler --
 
 export const createHousehold = onCall(
@@ -93,37 +152,32 @@ export const createHousehold = onCall(
     const { name, timezone, currency, clientRequestId } = parsed;
 
     // Idempotency: check if this uid + clientRequestId already produced a result.
-    const idempRef = admin.database().ref(`idempotency/${uid}/${clientRequestId}`);
-    let existingRecord = await idempRef.once('value');
-    if (existingRecord.exists()) {
-      const record = existingRecord.val();
-      // Verify fingerprint matches current payload to prevent stale results.
-      if (record.fingerprint && validateFingerprint(record.fingerprint)) {
+    const existingRecord = await rtdbGet('idempotency', uid, clientRequestId);
+    if (existingRecord && typeof existingRecord === 'object' && 'fingerprint' in existingRecord) {
+      const record = existingRecord as Record<string, unknown>;
+      if (record.fingerprint && validateFingerprint(record.fingerprint as string)) {
         logger.info('Idempotent hit', { uid, clientRequestId });
         return {
-          householdId: record.result.resourceId,
+          householdId: (record.result as Record<string, unknown>)?.resourceId as string,
           status: 'accepted',
-          createdAtMs: record.result.acceptedAtMs,
+          createdAtMs: (record.result as Record<string, unknown>)?.acceptedAtMs as number,
         };
       }
     }
 
     // Check if user already has a household — return existing instead of erroring.
-    const userHouseholdsRef = admin.database().ref(`userHouseholds/${uid}`);
-    const userHhSnapshot = await userHouseholdsRef.once('value');
-    if (userHhSnapshot.exists()) {
-      const children = userHhSnapshot.val();
-      const existingHids = Object.keys(children).map((k) => children[k]);
-      if (existingHids.length > 0) {
-        const existingHid = existingHids[0];
-        const hhRef = admin.database().ref(`households/${existingHid}`);
-        const hhSnap = await hhRef.once('value');
-        if (hhSnap.exists()) {
-          logger.info('User already has a household, returning existing', { uid, householdId: existingHid });
+    const userHouseholds = await rtdbGet('userHouseholds', uid) as Record<string, unknown> | null;
+    if (userHouseholds && typeof userHouseholds === 'object') {
+      const hids = Object.values(userHouseholds);
+      for (const hid of hids) {
+        if (typeof hid !== 'string') continue;
+        const hhSnap = await rtdbGet('households', hid) as Record<string, unknown> | null;
+        if (hhSnap && typeof hhSnap === 'object' && 'createdAtMs' in hhSnap) {
+          logger.info('User already has a household, returning existing', { uid, householdId: hid });
           return {
-            householdId: existingHid,
+            householdId: hid,
             status: 'accepted',
-            createdAtMs: hhSnap.val().createdAtMs,
+            createdAtMs: (hhSnap as Record<string, unknown>).createdAtMs as number,
           };
         }
       }
@@ -151,10 +205,8 @@ export const createHousehold = onCall(
       };
     }
 
-    // Atomic RTDB transaction to create household + member index.
-    const categoriesRef = admin.database().ref(`categories/${householdId}`);
-
-    await admin.database().ref().update({
+    // Write household + member via RTDB update.
+    await rtdbUpdate([''], {
       [`households/${householdId}`]: {
         id: householdId,
         ownerUid,
@@ -165,21 +217,21 @@ export const createHousehold = onCall(
         createdAtMs: nowMs,
       },
       [`members/${householdId}/${uid}`]: {
-        role: 'OWNER',
-        status: 'ACTIVE',
+        role: 'OWNER' as const,
+        status: 'ACTIVE' as const,
         joinedAtMs: nowMs,
       },
     });
 
     // Write user-to-household index (negative key = auto-sort by time).
     const negKey = `-${nowMs}`;
-    await userHouseholdsRef.child(negKey).set(householdId);
+    await rtdbSet(['userHouseholds', uid, negKey], householdId);
 
     // Write default categories.
-    await categoriesRef.set(categories);
+    await rtdbSet(['categories', householdId], categories);
 
     // Record idempotency result.
-    await idempRef.set({
+    await rtdbSet(['idempotency', uid, clientRequestId], {
       fingerprint,
       result: {
         resourceId: householdId,

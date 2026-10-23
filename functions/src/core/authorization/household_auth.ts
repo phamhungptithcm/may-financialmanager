@@ -7,6 +7,7 @@
 import { type AuthInfo } from '../auth/auth_context.js';
 import { AppError, ErrorCode } from '../errors/app_error.js';
 import * as admin from 'firebase-admin';
+import { getRTDBURL, isEmulator } from '../database/index.js';
 
 // Initialize Admin SDK — required before any household access check.
 let _db: admin.database.Database | null = null;
@@ -28,6 +29,24 @@ function getDatabase(): admin.database.Database {
   return _db;
 }
 
+// -- RTDB REST helpers for emulator mode --
+
+async function rtdbGetPath(...segments: string[]): Promise<unknown | null> {
+  if (isEmulator()) {
+    const baseUrl = getRTDBURL();
+    // Encode each segment individually to handle special chars (@, ., etc.)
+    // without breaking the path separators.
+    const encoded = segments.map(encodeURIComponent).join('/');
+    // NOTE: Do NOT use ?print=silent for reads — RTDB emulator returns HTTP 204
+    // with empty body on GET+print=silent; we'd parse it as null/false data.
+    const res = await fetch(`${baseUrl}${encoded}.json`);
+    return res.status === 200 ? (await res.json()) : null;
+  }
+  const db = getDatabase();
+  const snap = await db.ref(segments.join('/')).once('value');
+  return snap.exists() ? snap.val() : null;
+}
+
 // -- Allowed roles for a given resource/action pair --
 
 export type RoleRequirement = 'OWNER' | 'ADMIN' | 'EDITOR' | 'VIEWER' | 'MEMBER';
@@ -41,25 +60,22 @@ enum MemberStatus {
 
 /**
  * Checks if a user has the required role in a household.
- * Reads membership from /members/{hid}/{uid} via Admin SDK.
+ * Reads membership from /members/{hid}/{uid} via Admin SDK (or REST in emulator).
  */
 export async function checkHouseholdAccess(
   auth: AuthInfo,
   householdId: string,
   requiredRole: RoleRequirement,
 ): Promise<boolean> {
-  const memberRef = getDatabase()
-    .ref(`members/${householdId}/${auth.uid}`);
+  const memberData = await rtdbGetPath('members', householdId, auth.uid);
 
-  const snapshot = await memberRef.once('value');
-
-  if (!snapshot.exists()) {
+  if (!memberData || typeof memberData !== 'object') {
     return false; // No membership record — access denied.
   }
 
-  const data = snapshot.val();
-  const status = data?.status as string;
-  const role = data?.role as string;
+  const data = memberData as Record<string, unknown>;
+  const status = data.status as string;
+  const role = data.role as string;
 
   // Must be ACTIVE member. PENDING/REMOVED are denied.
   if (status !== MemberStatus.ACTIVE) {
@@ -104,17 +120,14 @@ export async function getMemberRole(
   auth: AuthInfo,
   householdId: string,
 ): Promise<string | null> {
-  const memberRef = getDatabase()
-    .ref(`members/${householdId}/${auth.uid}`);
+  const memberData = await rtdbGetPath('members', householdId, auth.uid);
 
-  const snapshot = await memberRef.once('value');
-
-  if (!snapshot.exists()) {
+  if (!memberData || typeof memberData !== 'object') {
     return null;
   }
 
-  const data = snapshot.val();
-  return data?.role as string | null;
+  const data = memberData as Record<string, unknown>;
+  return (data.role as string) ?? null;
 }
 
 /**
@@ -135,11 +148,8 @@ export async function checkMemberActive(
   }
 
   // Additional check: verify status is ACTIVE via direct lookup.
-  const statusRef = getDatabase()
-    .ref(`members/${householdId}/${auth.uid}/status`);
-  const snapshot = await statusRef.once('value');
-
-  if (snapshot.val() !== MemberStatus.ACTIVE) {
+  const statusData = await rtdbGetPath('members', householdId, auth.uid, 'status');
+  if (statusData !== MemberStatus.ACTIVE) {
     return new AppError(
       ErrorCode.HOUSEHOLD_ACCESS_DENIED,
       'Membership is not active',

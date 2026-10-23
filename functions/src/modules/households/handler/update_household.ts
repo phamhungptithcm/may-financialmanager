@@ -7,12 +7,12 @@
  */
 
 import { onCall, CallableRequest } from 'firebase-functions/v2/https';
-import * as admin from 'firebase-admin';
 import { z } from 'zod';
 import { guardAuth } from '../../../core/auth/auth_context.js';
 import { checkOwner } from '../../../core/authorization/household_auth.js';
 import { computeFingerprint, validateFingerprint } from '../../../core/idempotency/idempotency_service.js';
 import { createLogger } from '../../../core/logging/structured_logger.js';
+import { isEmulator, getRTDBURL } from '../../../core/database/index.js';
 
 // -- Zod schemas --
 
@@ -50,6 +50,39 @@ const UpdateHouseholdInputSchema = z.object({
 );
 
 type UpdateHouseholdInput = z.infer<typeof UpdateHouseholdInputSchema>;
+
+// -- RTDB REST helpers (emulator mode) --
+
+async function rtdbGet(...segments: string[]): Promise<unknown | null> {
+  if (isEmulator()) {
+    const baseUrl = getRTDBURL();
+    const encoded = segments.map(encodeURIComponent).join('/');
+    // NOTE: Do NOT use ?print=silent for reads — RTDB emulator returns HTTP 204
+    // with empty body on GET+print=silent.
+    const res = await fetch(`${baseUrl}${encoded}.json`);
+    return res.status === 200 ? (await res.json()) : null;
+  }
+  const db = (global as any).__may_rtdb_instance;
+  if (!db) throw new Error('RTDB not initialized in production');
+  const snap = await db.ref(segments.join('/')).once('value');
+  return snap.exists() ? snap.val() : null;
+}
+
+async function rtdbSet(segments: string[], data: unknown): Promise<void> {
+  if (isEmulator()) {
+    const baseUrl = getRTDBURL();
+    const encoded = segments.map(encodeURIComponent).join('/');
+    await fetch(`${baseUrl}${encoded}.json?print=silent`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return;
+  }
+  const db = (global as any).__may_rtdb_instance;
+  if (!db) throw new Error('RTDB not initialized in production');
+  await db.ref(segments.join('/')).set(data);
+}
 
 // -- Handler --
 
@@ -96,21 +129,18 @@ export const updateHousehold = onCall(
     }
 
     // Read current revision for compare-and-set.
-    const hhRef = admin.database().ref(`households/${validatedHid}`);
-    const hhSnap = await hhRef.once('value');
+    const hhData = await rtdbGet('households', validatedHid) as Record<string, unknown> | null;
 
-    if (!hhSnap.exists()) {
+    if (!hhData || typeof hhData !== 'object') {
       return { status: 'error', code: 'ACCOUNT_NOT_FOUND', message: 'Household not found' };
     }
 
-    const currentData = hhSnap.val();
-    const currentRevision = (currentData.schemaVersion as number) ?? 0;
+    const currentRevision = (hhData.schemaVersion as number) ?? 0;
 
     // Timezone change guard: reject if historical events exist.
-    if (timezone && timezone !== currentData.timezone) {
-      const eventsRef = admin.database().ref(`events/${validatedHid}`);
-      const eventsSnap = await eventsRef.once('value');
-      if (eventsSnap.exists() && Object.keys(eventsSnap.val()).length > 0) {
+    if (timezone && timezone !== (hhData.timezone as string)) {
+      const events = await rtdbGet('events', validatedHid) as Record<string, unknown> | null;
+      if (events && typeof events === 'object' && Object.keys(events).length > 0) {
         logger.warn('Cannot change timezone — historical events exist', {
           householdId: validatedHid,
           correlationId: `corr_${nowMs}`,
@@ -132,14 +162,13 @@ export const updateHousehold = onCall(
     updates.updatedAtMs = nowMs;
 
     // Apply update with optimistic concurrency control.
-    const updatedData = { ...currentData, ...updates };
-    await hhRef.set(updatedData);
+    const updatedData = { ...hhData, ...updates };
+    await rtdbSet(['households', validatedHid], updatedData);
 
     // Idempotency record for read operations on the household path.
-    const idempRef = admin.database().ref(`idempotency/${uid}/${clientRequestId}`);
     const fingerprint = computeFingerprint({ householdId: validatedHid, name, timezone, currency, clientRequestId });
     if (validateFingerprint(fingerprint)) {
-      await idempRef.set({
+      await rtdbSet(['idempotency', uid, clientRequestId], {
         fingerprint,
         result: {
           resourceId: validatedHid,

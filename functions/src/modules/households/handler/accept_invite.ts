@@ -6,12 +6,12 @@
  */
 
 import { onCall, CallableRequest } from 'firebase-functions/v2/https';
-import * as admin from 'firebase-admin';
-import * as crypto from 'crypto';
 import { z } from 'zod';
 import { guardAuth } from '../../../core/auth/auth_context.js';
 import { computeFingerprint, validateFingerprint } from '../../../core/idempotency/idempotency_service.js';
 import { createLogger } from '../../../core/logging/structured_logger.js';
+import { isEmulator, getRTDBURL } from '../../../core/database/index.js';
+import * as crypto from 'crypto';
 
 // -- Zod schemas --
 
@@ -23,6 +23,55 @@ const AcceptInviteInputSchema = z.object({
 });
 
 type AcceptInviteInput = z.infer<typeof AcceptInviteInputSchema>;
+
+// -- RTDB REST helpers (emulator mode) --
+
+async function rtdbGet(...segments: string[]): Promise<unknown | null> {
+  if (isEmulator()) {
+    const baseUrl = getRTDBURL();
+    const encoded = segments.map(encodeURIComponent).join('/');
+    // NOTE: Do NOT use ?print=silent for reads — RTDB emulator returns HTTP 204
+    // with empty body on GET+print=silent.
+    const res = await fetch(`${baseUrl}${encoded}.json`);
+    return res.status === 200 ? (await res.json()) : null;
+  }
+  const db = (global as any).__may_rtdb_instance;
+  if (!db) throw new Error('RTDB not initialized in production');
+  const snap = await db.ref(segments.join('/')).once('value');
+  return snap.exists() ? snap.val() : null;
+}
+
+async function rtdbSet(segments: string[], data: unknown): Promise<void> {
+  if (isEmulator()) {
+    const baseUrl = getRTDBURL();
+    const encoded = segments.map(encodeURIComponent).join('/');
+    await fetch(`${baseUrl}${encoded}.json?print=silent`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return;
+  }
+  const db = (global as any).__may_rtdb_instance;
+  if (!db) throw new Error('RTDB not initialized in production');
+  await db.ref(segments.join('/')).set(data);
+}
+
+async function rtdbUpdate(baseSegments: string[], data: Record<string, unknown>): Promise<void> {
+  if (isEmulator()) {
+    const baseUrl = getRTDBURL();
+    const basePath = baseSegments.map(encodeURIComponent).join('/');
+    await fetch(`${baseUrl}${basePath}.json?print=silent`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return;
+  }
+  const db = (global as any).__may_rtdb_instance;
+  if (!db) throw new Error('RTDB not initialized in production');
+  await db.ref(baseSegments.join('/')).update(data);
+}
 
 // -- Handler --
 
@@ -57,28 +106,23 @@ export const acceptHouseholdInvite = onCall(
     const { inviteId, householdId, inviteToken, clientRequestId } = parsed;
 
     // Check if user is already a member — deny duplicate joins.
-    const existingMemberRef = admin.database().ref(`members/${householdId}/${uid}`);
-    const existingMemberSnap = await existingMemberRef.once('value');
-    if (existingMemberSnap.exists()) {
-      const memberData = existingMemberSnap.val();
-      if (memberData.status === 'ACTIVE') {
-        logger.info('User already an active member, returning existing', {
-          uid,
-          householdId,
-          correlationId: `corr_${nowMs}`,
-        });
-        return {
-          householdId,
-          role: memberData.role ?? 'MEMBER',
-        };
-      }
+    const existingMember = await rtdbGet('members', householdId, uid) as Record<string, unknown> | null;
+    if (existingMember && typeof existingMember === 'object' && existingMember.status === 'ACTIVE') {
+      logger.info('User already an active member, returning existing', {
+        uid,
+        householdId,
+        correlationId: `corr_${nowMs}`,
+      });
+      return {
+        householdId,
+        role: (existingMember.role as string) ?? 'MEMBER',
+      };
     }
 
     // Read invite record.
-    const inviteRef = admin.database().ref(`invites/${householdId}/${inviteId}`);
-    const inviteSnap = await inviteRef.once('value');
+    const inviteData = await rtdbGet('invites', householdId, inviteId) as Record<string, unknown> | null;
 
-    if (!inviteSnap.exists()) {
+    if (!inviteData || typeof inviteData !== 'object') {
       return {
         status: 'error',
         code: 'ACCOUNT_NOT_FOUND',
@@ -86,10 +130,8 @@ export const acceptHouseholdInvite = onCall(
       };
     }
 
-    const inviteData = inviteSnap.val();
-
     // Verify invite is for the correct household.
-    if (inviteData.householdId !== householdId) {
+    if ((inviteData.householdId as string) !== householdId) {
       return {
         status: 'error',
         code: 'VALIDATION_ERROR',
@@ -98,7 +140,8 @@ export const acceptHouseholdInvite = onCall(
     }
 
     // Verify invite has not expired.
-    if (inviteData.expiresAtMs && nowMs > inviteData.expiresAtMs) {
+    const expiresAtMs = inviteData.expiresAtMs as number;
+    if (expiresAtMs && nowMs > expiresAtMs) {
       return {
         status: 'error',
         code: 'ACCOUNT_NOT_FOUND',
@@ -107,8 +150,8 @@ export const acceptHouseholdInvite = onCall(
     }
 
     // Verify usage count hasn't exceeded max.
-    const usageCount = inviteData.usageCount ?? 0;
-    const maxUsage = inviteData.maxUsage ?? 1;
+    const usageCount = (inviteData.usageCount as number) ?? 0;
+    const maxUsage = (inviteData.maxUsage as number) ?? 1;
     if (usageCount >= maxUsage) {
       return {
         status: 'error',
@@ -119,7 +162,7 @@ export const acceptHouseholdInvite = onCall(
 
     // Verify token hash match.
     const providedTokenHash = crypto.createHash('sha256').update(inviteToken).digest('hex');
-    if (providedTokenHash !== inviteData.tokenIdHash) {
+    if (providedTokenHash !== (inviteData.tokenIdHash as string)) {
       return {
         status: 'error',
         code: 'VALIDATION_ERROR',
@@ -127,10 +170,9 @@ export const acceptHouseholdInvite = onCall(
       };
     }
 
-    const invitedRole = inviteData.role ?? 'MEMBER';
+    const invitedRole = (inviteData.role as string) ?? 'MEMBER';
 
-    // Atomic transaction to accept the invite.
-    // Execute as a multi-path atomic update.
+    // Atomic update to accept the invite.
     const updates: Record<string, unknown> = {};
 
     // 1. Create/update member record.
@@ -158,13 +200,12 @@ export const acceptHouseholdInvite = onCall(
     }
 
     // Apply atomic update.
-    await admin.database().ref().update(updates);
+    await rtdbUpdate([], updates);
 
     // Idempotency record.
-    const idempRef = admin.database().ref(`idempotency/${uid}/${clientRequestId}`);
     const fingerprint = computeFingerprint({ inviteId, householdId, uid });
     if (validateFingerprint(fingerprint)) {
-      await idempRef.set({
+      await rtdbSet(['idempotency', uid, clientRequestId], {
         fingerprint,
         result: {
           resourceId: householdId,

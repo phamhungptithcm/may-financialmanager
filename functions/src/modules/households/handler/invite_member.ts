@@ -7,13 +7,13 @@
  */
 
 import { onCall, CallableRequest } from 'firebase-functions/v2/https';
-import * as admin from 'firebase-admin';
-import * as crypto from 'crypto';
 import { z } from 'zod';
 import { guardAuth } from '../../../core/auth/auth_context.js';
 import { checkHouseholdAccess } from '../../../core/authorization/household_auth.js';
 import { computeFingerprint, validateFingerprint } from '../../../core/idempotency/idempotency_service.js';
 import { createLogger } from '../../../core/logging/structured_logger.js';
+import { isEmulator, getRTDBURL } from '../../../core/database/index.js';
+import * as crypto from 'crypto';
 
 // -- Zod schemas --
 
@@ -30,6 +30,55 @@ const InviteMemberInputSchema = z.object({
 });
 
 type InviteMemberInput = z.infer<typeof InviteMemberInputSchema>;
+
+// -- RTDB REST helpers (emulator mode) --
+
+async function rtdbGet(...segments: string[]): Promise<unknown | null> {
+  if (isEmulator()) {
+    const baseUrl = getRTDBURL();
+    const encoded = segments.map(encodeURIComponent).join('/');
+    // NOTE: Do NOT use ?print=silent for reads — RTDB emulator returns HTTP 204
+    // with empty body on GET+print=silent.
+    const res = await fetch(`${baseUrl}${encoded}.json`);
+    return res.status === 200 ? (await res.json()) : null;
+  }
+  const db = (global as any).__may_rtdb_instance;
+  if (!db) throw new Error('RTDB not initialized in production');
+  const snap = await db.ref(segments.join('/')).once('value');
+  return snap.exists() ? snap.val() : null;
+}
+
+async function rtdbSet(segments: string[], data: unknown): Promise<void> {
+  if (isEmulator()) {
+    const baseUrl = getRTDBURL();
+    const encoded = segments.map(encodeURIComponent).join('/');
+    await fetch(`${baseUrl}${encoded}.json?print=silent`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return;
+  }
+  const db = (global as any).__may_rtdb_instance;
+  if (!db) throw new Error('RTDB not initialized in production');
+  await db.ref(segments.join('/')).set(data);
+}
+
+async function rtdbUpdate(baseSegments: string[], data: Record<string, unknown>): Promise<void> {
+  if (isEmulator()) {
+    const baseUrl = getRTDBURL();
+    const basePath = baseSegments.map(encodeURIComponent).join('/');
+    await fetch(`${baseUrl}${basePath}.json?print=silent`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return;
+  }
+  const db = (global as any).__may_rtdb_instance;
+  if (!db) throw new Error('RTDB not initialized in production');
+  await db.ref(baseSegments.join('/')).update(data);
+}
 
 // -- Handler --
 
@@ -78,34 +127,30 @@ export const inviteHouseholdMember = onCall(
     }
 
     // Idempotency: check if this request already produced a result.
-    const idempRef = admin.database().ref(`idempotency/${uid}/${clientRequestId}`);
-    let existingRecord = await idempRef.once('value');
-    if (existingRecord.exists()) {
-      const record = existingRecord.val();
-      if (record.fingerprint && validateFingerprint(record.fingerprint)) {
+    const existingRecord = await rtdbGet('idempotency', uid, clientRequestId);
+    if (existingRecord && typeof existingRecord === 'object' && 'fingerprint' in existingRecord) {
+      const record = existingRecord as Record<string, unknown>;
+      if (record.fingerprint && validateFingerprint(record.fingerprint as string)) {
         logger.info('Idempotent hit — returning existing invite', {
           householdId,
           clientRequestId,
           correlationId: `corr_${nowMs}`,
         });
         return {
-          inviteId: record.result.resourceId,
-          shareableLink: `[link_with_raw_token]`,
-          expiresAtMs: record.result.acceptedAtMs,
+          inviteId: (record.result as Record<string, unknown>)?.resourceId as string,
+          shareableLink: '[link_with_raw_token]',
+          expiresAtMs: (record.result as Record<string, unknown>)?.acceptedAtMs as number,
         };
       }
     }
 
-    // Check active invite count (simple heuristic: count unused invites).
-    const invitesRef = admin.database().ref(`invites/${householdId}`);
-    const invitesSnap = await invitesRef.once('value');
-    if (invitesSnap.exists()) {
-      const invites = invitesSnap.val();
+    // Check active invite count.
+    const invites = await rtdbGet('invites', householdId) as Record<string, unknown> | null;
+    if (invites && typeof invites === 'object') {
       let activeCount = 0;
       for (const _inviteId of Object.keys(invites)) {
         const inviteData = invites[_inviteId];
-        if (inviteData && inviteData.usageCount === 0) {
-          // Count only active (unused) invites.
+        if (inviteData && typeof inviteData === 'object' && (inviteData as Record<string, unknown>).usageCount === 0) {
           activeCount++;
         }
       }
@@ -119,30 +164,31 @@ export const inviteHouseholdMember = onCall(
     }
 
     // Generate cryptographically secure invite token.
-    const rawToken = crypto.randomBytes(32).toString('hex'); // 64-char hex string
+    const rawToken = crypto.randomBytes(32).toString('hex');
     const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
 
     // Generate invite ID.
     const inviteId = crypto.randomUUID();
     const expiresAtMs = nowMs + expiresInHours * 60 * 60 * 1000;
 
-    // Write invite metadata to RTDB.
-    const inviteRef = admin.database().ref(`invites/${householdId}/${inviteId}`);
-    await inviteRef.set({
-      householdId,
-      tokenIdHash: tokenHash,
-      createdByUid: uid,
-      expiresAtMs,
-      usageCount: 0,
-      maxUsage: 1,
-      role: inviteRole,
-      createdAtMs: nowMs,
+    // Write invite metadata via RTDB update.
+    await rtdbUpdate([''], {
+      [`invites/${householdId}/${inviteId}`]: {
+        householdId,
+        tokenIdHash: tokenHash,
+        createdByUid: uid,
+        expiresAtMs,
+        usageCount: 0,
+        maxUsage: 1,
+        role: inviteRole,
+        createdAtMs: nowMs,
+      },
     });
 
     // Compute fingerprint and store idempotency record.
     const fingerprint = computeFingerprint({ householdId, inviteRole, expiresInHours });
     if (validateFingerprint(fingerprint)) {
-      await idempRef.set({
+      await rtdbSet(['idempotency', uid, clientRequestId], {
         fingerprint,
         result: {
           resourceId: inviteId,
