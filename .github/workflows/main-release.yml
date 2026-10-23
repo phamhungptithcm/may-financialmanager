@@ -238,7 +238,7 @@ jobs:
         run: |
           VERSION="${{ steps.calc.outputs.version }}"
           git config user.name "GitHub Actions"
-          git config user.email "<EMAIL>"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git tag -a "$VERSION" -m "Release $VERSION ($(date +%Y-%m-%d))" || {
             echo "::error::Failed to create tag $VERSION (already exists or permission denied)" >&2
             exit 1
@@ -256,7 +256,7 @@ jobs:
     name: Generate Release Notes
     timeout-minutes: 10
     needs: [calculate-version]
-    if: always() && steps.calc.outputs.skip != 'true' && steps.calc.outputs.version != ''
+    if: always() && needs.calculate-version.outputs.skip != 'true' && needs.calculate-version.outputs.version != ''
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.notes.outputs.version }}
@@ -271,7 +271,7 @@ jobs:
       - name: Determine previous tag for diff
         id: prev-tag
         run: |
-          PREV=$(git describe --tags --abbrev=0 ${{ steps.calc.outputs.version }}^ 2>/dev/null || true)
+          PREV=$(git describe --tags --abbrev=0 ${{ needs.calculate-version.outputs.version }}^ 2>/dev/null || true)
           if [[ -n "$PREV" ]]; then
             echo "tag=$PREV" >> "$GITHUB_OUTPUT"
           else
@@ -282,9 +282,9 @@ jobs:
       - name: Generate professional release notes
         id: notes
         env:
-          VERSION: ${{ steps.calc.outputs.version }}
+          VERSION: ${{ needs.calculate-version.outputs.version }}
         run: |
-          NOTES_FILE="release-notes-${{ steps.calc.outputs.version }}.md"
+          NOTES_FILE="release-notes-${{ needs.calculate-version.outputs.version }}.md"
           CI_ROOT=. scripts/ci/generate-release-notes.sh > "$NOTES_FILE" 2>/dev/null || {
             # Fallback: generate minimal notes.
             echo "# ${VERSION}" > "$NOTES_FILE"
@@ -295,13 +295,13 @@ jobs:
             echo "" >> "$NOTES_FILE"
             echo "Release generated automatically by CI. Manual review recommended for first releases." >> "$NOTES_FILE"
           }
-          echo "version=${{ steps.calc.outputs.version }}" >> "$GITHUB_OUTPUT"
+          echo "version=${{ needs.calculate-version.outputs.version }}" >> "$GITHUB_OUTPUT"
           echo "path=$NOTES_FILE" >> "$GITHUB_OUTPUT"
 
       - name: Upload release notes artifact
         uses: actions/upload-artifact@v4
         with:
-          name: release-notes-${{ steps.calc.outputs.version }}
+          name: release-notes-${{ needs.calculate-version.outputs.version }}
           path: ${{ steps.notes.outputs.path }}
           retention-days: 90
 
@@ -314,7 +314,7 @@ jobs:
     needs: [calculate-version, generate-notes]
     if: |
       always() &&
-      steps.calc.outputs.version != ''
+      needs.calculate-version.outputs.version != ''
     runs-on: ubuntu-latest
     steps:
       - name: Checkout exact main commit (provenance)
@@ -340,7 +340,7 @@ jobs:
           BUILD_COMMIT=$(git rev-parse HEAD)
           echo "Release artifacts built from: $BUILD_COMMIT"
           # Cross-check: ensure the tag points to this commit.
-          TAG_COMMIT=$(git rev-list -1 "${{ steps.calc.outputs.version }}")
+          TAG_COMMIT=$(git rev-list -1 "${{ needs.calculate-version.outputs.version }}")
           if [[ "$BUILD_COMMIT" != "$TAG_COMMIT" ]]; then
             echo "ERROR: commit provenance mismatch!" >&2
             echo "  Build:   $BUILD_COMMIT" >&2
@@ -353,8 +353,8 @@ jobs:
       - name: Create GitHub Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION: ${{ steps.calc.outputs.version }}
-          NOTES_FILE: release-notes-${{ steps.calc.outputs.version }}.md
+          VERSION: ${{ needs.calculate-version.outputs.version }}
+          NOTES_FILE: ${{ needs.generate-notes.outputs.notes-path }}
         run: |
           # Use the generated notes if available; otherwise generate minimal notes.
           if [[ -s "$NOTES_FILE" ]]; then
@@ -386,7 +386,7 @@ jobs:
         if: always()
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION: ${{ steps.calc.outputs.version }}
+          VERSION: ${{ needs.calculate-version.outputs.version }}
         run: |
           if [[ -f "dist/apk/app.apk" ]]; then
             gh release upload "$VERSION" dist/apk/app.apk --clobber || \
@@ -397,7 +397,7 @@ jobs:
         if: always()
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION: ${{ steps.calc.outputs.version }}
+          VERSION: ${{ needs.calculate-version.outputs.version }}
         run: |
           if [[ -f "dist/aab/app-release.aab" ]]; then
             gh release upload "$VERSION" dist/aab/app-release.aab --clobber || \
@@ -408,7 +408,7 @@ jobs:
       - name: Publish release summary
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION: ${{ steps.calc.outputs.version }}
+          VERSION: ${{ needs.calculate-version.outputs.version }}
         run: |
           echo "**🚀 Mây Family Finance ${VERSION} Published**" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"

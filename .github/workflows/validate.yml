@@ -3,12 +3,11 @@
 # For Main Release use `.github/workflows/main-release.yml`.
 # This file is retained as a reference for the original Phase 0 pipeline.
 
+# This file is DEPRECATED and has NO triggers — it will never run in CI.
+# See branch-ci.yml and main-release.yml for current pipelines.
 name: validate (deprecated)
 
-on:
-  push:
-    branches: [main]
-  pull_request:
+on: []
 
 concurrency:
   group: validate-${{ github.head_ref || github.run_id }}
