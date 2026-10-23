@@ -65,6 +65,7 @@ class MayApp extends ConsumerWidget {
 
   /// Determines which theme to use. Phase 0 defaults to light mode.
   ThemeMode _preferredTheme(AppConfig config) {
-    return ThemeMode.system; // Will read OS preference; user override in Phase 1.
+    return ThemeMode
+        .system; // Will read OS preference; user override in Phase 1.
   }
 }

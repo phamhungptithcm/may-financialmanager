@@ -34,7 +34,8 @@ class _MaySkeletonState extends State<MaySkeleton>
   @override
   void initState() {
     super.initState();
-    final reducedMotion = MediaQuery.platformBrightnessOf(context) == Brightness.dark;
+    final reducedMotion =
+        MediaQuery.platformBrightnessOf(context) == Brightness.dark;
     _controller = AnimationController(
       duration: MayMotion.shimmerCycle,
       vsync: this,

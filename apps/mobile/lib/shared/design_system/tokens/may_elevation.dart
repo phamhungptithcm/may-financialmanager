@@ -60,7 +60,6 @@ class _MayElevation {
       borderRadius: shape!.borderRadius,
     );
   }
+
   double get elevationValue => elevation;
 }
-
-

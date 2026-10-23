@@ -50,7 +50,8 @@ class _MaySearchFieldState extends State<MaySearchField> {
   @override
   void didUpdateWidget(covariant MaySearchField oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.query != widget.query && _controller.text != (widget.query ?? '')) {
+    if (oldWidget.query != widget.query &&
+        _controller.text != (widget.query ?? '')) {
       if (widget.query != _currentQuery) {
         _controller.text = widget.query ?? '';
         _currentQuery = widget.query;
@@ -96,20 +97,25 @@ class _MaySearchFieldState extends State<MaySearchField> {
         textAlignVertical: TextAlignVertical.center,
         decoration: InputDecoration(
           hintText: widget.hintText,
-          hintStyle: MayTypography.bodySmall(context).copyWith(color: MayColors.secondary),
-          prefixIcon: Icon(Icons.search_outlined, size: 20, color: MayColors.secondary),
+          hintStyle: MayTypography.bodySmall(context)
+              .copyWith(color: MayColors.secondary),
+          prefixIcon:
+              Icon(Icons.search_outlined, size: 20, color: MayColors.secondary),
           suffixIcon: hasQuery
               ? GestureDetector(
                   onTap: _clear,
                   child: Container(
-                    constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                    constraints:
+                        const BoxConstraints(minWidth: 48, minHeight: 48),
                     padding: const EdgeInsets.only(right: 12),
-                    child: Icon(Icons.close_rounded, size: 18, color: MayColors.secondary),
+                    child: Icon(Icons.close_rounded,
+                        size: 18, color: MayColors.secondary),
                   ),
                 )
               : null,
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
         ),
         style: MayTypography.bodyMedium(context),
       ),

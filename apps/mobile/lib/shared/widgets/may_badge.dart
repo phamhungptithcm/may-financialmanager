@@ -24,10 +24,22 @@ class MayBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final (bgColor, textColor) = switch (kind) {
       MayBadgeKind.default_ => (MayColors.accent, MayColors.surface),
-      MayBadgeKind.info => (MayColors.accent.withOpacity(0.15), MayColors.accent),
-      MayBadgeKind.success => (MayColors.success.withOpacity(0.15), MayColors.success),
-      MayBadgeKind.warning => (MayColors.warning.withOpacity(0.15), MayColors.warning),
-      MayBadgeKind.alert => (MayColors.danger.withOpacity(0.15), MayColors.danger),
+      MayBadgeKind.info => (
+          MayColors.accent.withOpacity(0.15),
+          MayColors.accent
+        ),
+      MayBadgeKind.success => (
+          MayColors.success.withOpacity(0.15),
+          MayColors.success
+        ),
+      MayBadgeKind.warning => (
+          MayColors.warning.withOpacity(0.15),
+          MayColors.warning
+        ),
+      MayBadgeKind.alert => (
+          MayColors.danger.withOpacity(0.15),
+          MayColors.danger
+        ),
     };
 
     return Container(

@@ -7,8 +7,8 @@ import 'package:may/shared/design_system/tokens/may_colors.dart';
 import 'package:may/shared/design_system/tokens/may_typography.dart';
 
 class MayProgressBar extends StatelessWidget {
-  final int used;       // minor units (integer)
-  final int target;     // minor units (integer)
+  final int used; // minor units (integer)
+  final int target; // minor units (integer)
   final bool allowOverLimit;
   final String? label;
 
@@ -73,7 +73,8 @@ class MayProgressBar extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             'Vượt $used - target $target',
-            style: MayTypography.labelSmall(context).copyWith(color: MayColors.danger),
+            style: MayTypography.labelSmall(context)
+                .copyWith(color: MayColors.danger),
           ),
         ],
       ],

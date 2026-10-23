@@ -23,7 +23,8 @@ class AppConfig {
   // or build-time dart-define values.
   final String? projectId;
   final String? appId;
-  final String? apiKey;        // Not a secret per Firebase docs, but rules+auth required
+  final String?
+      apiKey; // Not a secret per Firebase docs, but rules+auth required
 
   const AppConfig({
     required this.environment,
@@ -43,7 +44,7 @@ class AppConfig {
 
   // -- Feature flags (Phase 0 defaults) --
   bool get receiptCaptureEnabled => true;
-  bool get investmentFeatures => false;  // Phase 3+
+  bool get investmentFeatures => false; // Phase 3+
   bool get plusAvailable => true;
 
   @override

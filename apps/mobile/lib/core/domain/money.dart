@@ -145,9 +145,9 @@ final class Money {
     final negative = minor < 0;
     final absMinor = minor.abs();
     final str = absMinor.toString().replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (m) => '${m[1]},',
-    );
+          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (m) => '${m[1]},',
+        );
     return '${negative ? '-$str' : str}';
   }
 

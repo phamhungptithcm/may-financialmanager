@@ -29,7 +29,8 @@ class MayFilterChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: selected ? MayColors.accent.withOpacity(0.15) : MayColors.surface,
+          color:
+              selected ? MayColors.accent.withOpacity(0.15) : MayColors.surface,
           border: Border.all(
             color: selected ? MayColors.accent : MayColors.divider,
             width: 1,
@@ -39,7 +40,10 @@ class MayFilterChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (icon != null) Icon(icon, size: 16, color: selected ? MayColors.accent : MayColors.secondary),
+            if (icon != null)
+              Icon(icon,
+                  size: 16,
+                  color: selected ? MayColors.accent : MayColors.secondary),
             if (icon != null && label.isNotEmpty) const SizedBox(width: 4),
             Text(
               label,

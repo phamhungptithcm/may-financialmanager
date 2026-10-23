@@ -73,9 +73,19 @@ class _MayDateFieldState extends State<MayDateField> {
     if (date == null) return '';
     // Vietnamese formatting: "23 tháng 10, 2025"
     final monthNames = <String>[
-      '', 'tháng 1', 'tháng 2', 'tháng 3', 'tháng 4', 'tháng 5',
-      'tháng 6', 'tháng 7', 'tháng 8', 'tháng 9', 'tháng 10',
-      'tháng 11', 'tháng 12',
+      '',
+      'tháng 1',
+      'tháng 2',
+      'tháng 3',
+      'tháng 4',
+      'tháng 5',
+      'tháng 6',
+      'tháng 7',
+      'tháng 8',
+      'tháng 9',
+      'tháng 10',
+      'tháng 11',
+      'tháng 12',
     ];
     return '${date.day} tháng ${monthNames[date.month]}, ${date.year}';
   }
@@ -100,7 +110,7 @@ class _MayDateFieldState extends State<MayDateField> {
     if (Theme.of(context).platform == TargetPlatform.iOS ||
         Theme.of(context).platform == TargetPlatform.macOS) {
       picked = await _showCupertinoDatePicker(
-        context, initialYear, initialMonth, initialDay, effectiveLocale);
+          context, initialYear, initialMonth, initialDay, effectiveLocale);
     } else {
       final pickedDate = await showDatePicker(
         context: context,
@@ -152,15 +162,18 @@ class _MayDateFieldState extends State<MayDateField> {
                 children: [
                   TextButton(
                     onPressed: () => Navigator.of(ctx).pop(),
-                    child: const Text('Cancel', style: TextStyle(color: MayColors.secondary)),
+                    child: const Text('Cancel',
+                        style: TextStyle(color: MayColors.secondary)),
                   ),
                   const SizedBox(width: 8),
                   GestureDetector(
                     onTap: () {
-                      completer.complete(LocalDate(pickerState.year, pickerState.month, pickerState.day));
+                      completer.complete(LocalDate(pickerState.year,
+                          pickerState.month, pickerState.day));
                       Navigator.of(ctx).pop();
                     },
-                    child: Text('Done', style: TextStyle(color: MayColors.accent)),
+                    child:
+                        Text('Done', style: TextStyle(color: MayColors.accent)),
                   ),
                 ],
               ),
@@ -171,7 +184,7 @@ class _MayDateFieldState extends State<MayDateField> {
                   onDateTimeChanged: (v) => setState(() => pickerState = v),
                   minimumDate: DateTime(1900, 1, 1),
                   maximumDate: DateTime(2100, 12, 31),
-                                  ),
+                ),
               ),
             ],
           ),
@@ -213,7 +226,6 @@ class _MayDateFieldState extends State<MayDateField> {
           ),
           const SizedBox(height: 8),
         ],
-
         GestureDetector(
           onTap: () => _pickDate(context),
           child: Container(
@@ -222,9 +234,8 @@ class _MayDateFieldState extends State<MayDateField> {
             decoration: BoxDecoration(
               color: MayColors.inputFill,
               border: Border.all(
-                color: _errorText != null
-                    ? MayColors.danger
-                    : MayColors.divider,
+                color:
+                    _errorText != null ? MayColors.danger : MayColors.divider,
                 width: 1.0,
               ),
               borderRadius: BorderRadius.circular(8),
@@ -233,7 +244,9 @@ class _MayDateFieldState extends State<MayDateField> {
               children: [
                 Expanded(
                   child: Text(
-                    _displayText.isNotEmpty ? _displayText : (widget.hintText ?? ''),
+                    _displayText.isNotEmpty
+                        ? _displayText
+                        : (widget.hintText ?? ''),
                     style: MayTypography.bodyLarge(context).copyWith(
                       color: _displayText.isEmpty ? MayColors.secondary : null,
                     ),
@@ -241,16 +254,18 @@ class _MayDateFieldState extends State<MayDateField> {
                 ),
                 if (_displayText.isNotEmpty) ...[
                   const SizedBox(width: 8),
-                  Icon(Icons.calendar_today_outlined, size: 20, color: MayColors.secondary),
+                  Icon(Icons.calendar_today_outlined,
+                      size: 20, color: MayColors.secondary),
                 ],
               ],
             ),
           ),
         ),
-
         if (_errorText != null) ...[
           const SizedBox(height: 4),
-          Text(_errorText!, style: MayTypography.labelSmall(context).copyWith(color: MayColors.danger)),
+          Text(_errorText!,
+              style: MayTypography.labelSmall(context)
+                  .copyWith(color: MayColors.danger)),
         ],
       ],
     );

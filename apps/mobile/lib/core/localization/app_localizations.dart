@@ -30,9 +30,8 @@ class AppLocalizations {
 
   // -- Keys (Phase 0 coverage) --
 
-  String get onboardingTitle => locale.languageCode == 'vi'
-      ? 'Chào mừng bạn'
-      : 'Welcome';
+  String get onboardingTitle =>
+      locale.languageCode == 'vi' ? 'Chào mừng bạn' : 'Welcome';
 
   String get signInWithGoogle => locale.languageCode == 'vi'
       ? 'Đăng nhập với Google'
@@ -46,33 +45,24 @@ class AppLocalizations {
       ? 'Tạo hộ gia đình mới'
       : 'Create new household';
 
-  String get householdName => locale.languageCode == 'vi'
-      ? 'Tên hộ gia đình'
-      : 'Household name';
+  String get householdName =>
+      locale.languageCode == 'vi' ? 'Tên hộ gia đình' : 'Household name';
 
-  String get currency => locale.languageCode == 'vi'
-      ? 'Tiền tệ'
-      : 'Currency';
+  String get currency => locale.languageCode == 'vi' ? 'Tiền tệ' : 'Currency';
 
-  String get homeTabLabel => locale.languageCode == 'vi'
-      ? 'Trang chủ'
-      : 'Home';
+  String get homeTabLabel => locale.languageCode == 'vi' ? 'Trang chủ' : 'Home';
 
-  String get transactionsTabLabel => locale.languageCode == 'vi'
-      ? 'Giao dịch'
-      : 'Transactions';
+  String get transactionsTabLabel =>
+      locale.languageCode == 'vi' ? 'Giao dịch' : 'Transactions';
 
-  String get analyticsTabLabel => locale.languageCode == 'vi'
-      ? 'Báo cáo'
-      : 'Reports';
+  String get analyticsTabLabel =>
+      locale.languageCode == 'vi' ? 'Báo cáo' : 'Reports';
 
-  String get wealthTabLabel => locale.languageCode == 'vi'
-      ? 'Tài sản'
-      : 'Wealth';
+  String get wealthTabLabel =>
+      locale.languageCode == 'vi' ? 'Tài sản' : 'Wealth';
 
-  String get settingsTabLabel => locale.languageCode == 'vi'
-      ? 'Cá nhân'
-      : 'Settings';
+  String get settingsTabLabel =>
+      locale.languageCode == 'vi' ? 'Cá nhân' : 'Settings';
 
   // -- Common action labels --
   String get save => locale.languageCode == 'vi' ? 'Lưu' : 'Save';
@@ -85,27 +75,27 @@ class AppLocalizations {
   String get retry => locale.languageCode == 'vi' ? 'Thử lại' : 'Retry';
 
   // -- State labels --
-  String get loading => locale.languageCode == 'vi' ? 'Đang tải...' : 'Loading...';
-  String get submitting => locale.languageCode == 'vi' ? 'Đang gửi...' : 'Submitting...';
-  String get syncing => locale.languageCode == 'vi' ? 'Đang đồng bộ' : 'Syncing...';
+  String get loading =>
+      locale.languageCode == 'vi' ? 'Đang tải...' : 'Loading...';
+  String get submitting =>
+      locale.languageCode == 'vi' ? 'Đang gửi...' : 'Submitting...';
+  String get syncing =>
+      locale.languageCode == 'vi' ? 'Đang đồng bộ' : 'Syncing...';
 
   // -- Empty / error states --
-  String get emptyStateTitle => locale.languageCode == 'vi'
-      ? 'Chưa có dữ liệu'
-      : 'No data yet';
+  String get emptyStateTitle =>
+      locale.languageCode == 'vi' ? 'Chưa có dữ liệu' : 'No data yet';
 
-  String get errorStateTitle => locale.languageCode == 'vi'
-      ? 'Lỗi'
-      : 'Error';
+  String get errorStateTitle => locale.languageCode == 'vi' ? 'Lỗi' : 'Error';
 
   // -- Money formatting (locale-aware) --
   String formatMoney(int minor, String currency) {
     final negative = minor < 0;
     final absMinor = minor.abs();
     final str = absMinor.toString().replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (m) => '${m[1]},',
-    );
+          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (m) => '${m[1]},',
+        );
     return '${negative ? '-$str' : str} $currency';
   }
 

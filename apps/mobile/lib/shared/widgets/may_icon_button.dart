@@ -50,7 +50,7 @@ class MayIconButton extends StatelessWidget {
     this.iconColor,
     this.fillColor,
     this.size = 24.0,
-  })  : variant = IconButtonVariant.solid;
+  }) : variant = IconButtonVariant.solid;
 
   const MayIconButton.outlined({
     super.key,
@@ -61,7 +61,7 @@ class MayIconButton extends StatelessWidget {
     this.iconColor,
     this.fillColor,
     this.size = 24.0,
-  })  : variant = IconButtonVariant.outlined;
+  }) : variant = IconButtonVariant.outlined;
 
   const MayIconButton.text({
     super.key,
@@ -72,11 +72,12 @@ class MayIconButton extends StatelessWidget {
     this.iconColor,
     this.fillColor,
     this.size = 24.0,
-  })  : variant = IconButtonVariant.text;
+  }) : variant = IconButtonVariant.text;
 
   @override
   Widget build(BuildContext context) {
-    final effectiveIconColor = iconColor ?? Theme.of(context).colorScheme.onSurface;
+    final effectiveIconColor =
+        iconColor ?? Theme.of(context).colorScheme.onSurface;
     final effectiveSize = size!;
 
     return Tooltip(
@@ -111,7 +112,9 @@ class MayIconButton extends StatelessWidget {
         );
       case IconButtonVariant.outlined:
         return BoxDecoration(
-          border: Border.all(color: fillColor ?? theme.dividerTheme.color ?? MayColors.divider),
+          border: Border.all(
+              color:
+                  fillColor ?? theme.dividerTheme.color ?? MayColors.divider),
           shape: BoxShape.circle,
         );
       case IconButtonVariant.text:

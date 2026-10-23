@@ -42,8 +42,7 @@ abstract final class MayRadius {
       RoundedRectangleBorder(borderRadius: BorderRadius.circular(s20));
 
   /// Fully rounded pill shape.
-  static RoundedRectangleBorder pill(double height) =>
-      RoundedRectangleBorder(
+  static RoundedRectangleBorder pill(double height) => RoundedRectangleBorder(
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(height / 2),
           topRight: Radius.circular(height / 2),

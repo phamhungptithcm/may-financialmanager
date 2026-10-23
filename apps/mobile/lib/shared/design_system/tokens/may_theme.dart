@@ -8,7 +8,8 @@ import 'package:may/shared/design_system/tokens/may_colors.dart';
 
 /// App-wide theme token extension.
 extension MayThemeExtension on BuildContext {
-  MayThemeData get mayTheme => throw UnimplementedError('Use MayThemeExtension.of(context)');
+  MayThemeData get mayTheme =>
+      throw UnimplementedError('Use MayThemeExtension.of(context)');
 }
 
 /// Theme data combining all design tokens for a single theme variant.
@@ -61,7 +62,7 @@ class MayThemeData {
   Color get onAccent => const Color(0xFFFFFFFF);
 }
 
-  /// Light theme builder (approved prototype palette).
+/// Light theme builder (approved prototype palette).
 ThemeData light() {
   return ThemeData(
     useMaterial3: true,
@@ -134,7 +135,7 @@ ThemeData light() {
   );
 }
 
-  /// Dark theme builder (approximate inverse of light).
+/// Dark theme builder (approximate inverse of light).
 ThemeData dark() {
   return ThemeData(
     useMaterial3: true,
@@ -142,7 +143,6 @@ ThemeData dark() {
     scaffoldBackgroundColor: MayColors.canvasDark,
     cardColor: MayColors.surfaceDark,
     dividerColor: const Color(0xFF3A3F3C),
-
     colorScheme: ColorScheme.fromSeed(
       seedColor: MayColors.accentDark,
       primary: MayColors.primaryDark,
@@ -153,7 +153,6 @@ ThemeData dark() {
       onError: MayColors.surfaceDark,
       brightness: Brightness.dark,
     ),
-
     textTheme: const TextTheme(
       displayLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.w700),
       headlineLarge: TextStyle(fontSize: 28, fontWeight: FontWeight.w600),
@@ -164,7 +163,6 @@ ThemeData dark() {
       bodySmall: TextStyle(fontSize: 15, fontWeight: FontWeight.w400),
       labelSmall: TextStyle(fontSize: 13, fontWeight: FontWeight.w400),
     ),
-
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: MayColors.accentDark,
@@ -174,7 +172,6 @@ ThemeData dark() {
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
       ),
     ),
-
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: const Color(0xFF2A2F2C),
@@ -192,7 +189,6 @@ ThemeData dark() {
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
     ),
-
     listTileTheme: const ListTileThemeData(
       shape: RoundedRectangleBorder(),
       contentPadding: EdgeInsets.zero,

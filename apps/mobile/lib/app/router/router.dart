@@ -11,7 +11,8 @@ import 'package:firebase_auth/firebase_auth.dart' as fb;
 // -- Feature imports (Phase 1) --
 
 import 'package:may/features/auth/presentation/sign_in_screen.dart' as auth;
-import 'package:may/features/onboarding/presentation/household_setup_screen.dart' as onboarding;
+import 'package:may/features/onboarding/presentation/household_setup_screen.dart'
+    as onboarding;
 
 // -- Route constants (from UI-XXX inventory) --
 
@@ -100,12 +101,12 @@ class MayRouter {
   final GoRouter router;
 
   MayRouter({required AuthState initialAuthState})
-    : router = GoRouter(
-        initialLocation: Routes.welcome,
-        debugLogDiagnostics: true,
-        redirect: (context, state) => _redirect(context, state),
-        routes: _routes(initialAuthState),
-      );
+      : router = GoRouter(
+          initialLocation: Routes.welcome,
+          debugLogDiagnostics: true,
+          redirect: (context, state) => _redirect(context, state),
+          routes: _routes(initialAuthState),
+        );
 
   // -- Redirect logic (scaffold) --
 
@@ -135,7 +136,8 @@ class MayRouter {
       GoRoute(
         name: 'welcome',
         path: Routes.welcome,
-        builder: (ctx, state) => const _StubScreen(routeName: 'Welcome (UI-01)'),
+        builder: (ctx, state) =>
+            const _StubScreen(routeName: 'Welcome (UI-01)'),
       ),
     );
 
@@ -160,7 +162,8 @@ class MayRouter {
       GoRoute(
         name: 'onboardingAccounts',
         path: Routes.onboardingAccounts,
-        builder: (ctx, state) => const _StubScreen(routeName: 'Household Accounts (UI-04)'),
+        builder: (ctx, state) =>
+            const _StubScreen(routeName: 'Household Accounts (UI-04)'),
       ),
     );
 
@@ -173,7 +176,8 @@ class MayRouter {
           GoRoute(
             name: 'home',
             path: Routes.home,
-            builder: (ctx, state) => const _StubScreen(routeName: 'Home (UI-05)'),
+            builder: (ctx, state) =>
+                const _StubScreen(routeName: 'Home (UI-05)'),
           ),
           GoRoute(
             name: 'transactions',

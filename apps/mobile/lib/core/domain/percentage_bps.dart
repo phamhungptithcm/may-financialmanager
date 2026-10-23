@@ -16,7 +16,7 @@ final class PercentageBps {
 
   // -- Validation invariants (BR-07) --
 
-  static const _minBps = 1;   // minimum 1 bp (per spec: sorted unique, minimum 1)
+  static const _minBps = 1; // minimum 1 bp (per spec: sorted unique, minimum 1)
   static const _maxBps = 10000; // maximum 100%
 
   factory PercentageBps.fromPercent(double percent) {
@@ -52,7 +52,8 @@ final class PercentageBps {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) || other is PercentageBps && basisPoints == other.basisPoints;
+      identical(this, other) ||
+      other is PercentageBps && basisPoints == other.basisPoints;
 
   @override
   int get hashCode => basisPoints;

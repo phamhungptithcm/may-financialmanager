@@ -71,7 +71,8 @@ class MayText extends StatelessWidget {
         MayTextRole.none => null,
       };
       if (semanticHint != null) {
-        child = Semantics(          child: child,
+        child = Semantics(
+          child: child,
         );
       }
     }

@@ -7,19 +7,19 @@ import 'package:flutter/foundation.dart';
 
 /// Stable error codes matching ApiErrorDetail.code in contracts.
 enum AppFailureCode {
-  authRequired,          // user must re-login
-  validation,            // invalid input (fieldErrors available)
+  authRequired, // user must re-login
+  validation, // invalid input (fieldErrors available)
   householdAccessDenied, // not a member of this tenant
-  roleDenied,           // insufficient role (OWNER/ADMIN/EDITOR required)
-  accountNotFound,      // referenced account does not exist in tenant
-  currencyMismatch,     // different currencies attempted
-  duplicateConflict,    // same clientRequestId with conflicting payload
-  alreadyReversed,      // event has already been reversed
-  receiptNotReady,      // OCR job not yet in REVIEW_REQUIRED state
-  purchaseUnverified,   // store proof could not be verified
-  rateLimited,          // too many requests; retry after backoff
+  roleDenied, // insufficient role (OWNER/ADMIN/EDITOR required)
+  accountNotFound, // referenced account does not exist in tenant
+  currencyMismatch, // different currencies attempted
+  duplicateConflict, // same clientRequestId with conflicting payload
+  alreadyReversed, // event has already been reversed
+  receiptNotReady, // OCR job not yet in REVIEW_REQUIRED state
+  purchaseUnverified, // store proof could not be verified
+  rateLimited, // too many requests; retry after backoff
   temporaryUnavailable, // server/service unavailable; exponential retry
-  invariantFailed,      // internal consistency violation (sanitized)
+  invariantFailed, // internal consistency violation (sanitized)
 }
 
 /// A Failure value representing a transient or permanent error.

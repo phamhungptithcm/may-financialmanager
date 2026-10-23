@@ -10,10 +10,10 @@ import 'package:may/shared/design_system/tokens/may_motion.dart';
 
 /// Button variant controlling visual appearance.
 enum MayButtonVariant {
-  primary,     // Filled accent button (default CTA)
-  secondary,   // Outlined button (secondary action)
-  tertiary,    // Subtle filled button (group actions)
-  text,        // Plain text link button
+  primary, // Filled accent button (default CTA)
+  secondary, // Outlined button (secondary action)
+  tertiary, // Subtle filled button (group actions)
+  text, // Plain text link button
 }
 
 /// Reusable button widget with all required states.
@@ -120,8 +120,7 @@ class _MayButtonState extends State<MayButton>
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
-        final scale =
-            (_pressed && !disabled) ? _scaleAnimation.value : 1.0;
+        final scale = (_pressed && !disabled) ? _scaleAnimation.value : 1.0;
 
         return Transform.scale(
           scale: scale,
@@ -132,13 +131,16 @@ class _MayButtonState extends State<MayButton>
             child: InkWell(
               onTap: disabled ? null : _safeOnPressed,
               borderRadius: BorderRadius.circular(16),
-              splashFactory: NoSplash.splashFactory, // Custom splash handled below
+              splashFactory:
+                  NoSplash.splashFactory, // Custom splash handled below
               child: Container(
                 constraints: BoxConstraints(
-                  minWidth: widget.minWidth ?? (widget.variant == MayButtonVariant.text ? 0 : 120),
+                  minWidth: widget.minWidth ??
+                      (widget.variant == MayButtonVariant.text ? 0 : 120),
                   maxWidth: widget.maxWidth ?? double.infinity,
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
                 decoration: _decoration(disabled: disabled),
                 child: _content(context, isReducedMotion: isReducedMotion),
               ),
@@ -164,7 +166,8 @@ class _MayButtonState extends State<MayButton>
         );
       case MayButtonVariant.tertiary:
         return BoxDecoration(
-          color: disabled ? MayColors.surface : MayColors.accent.withOpacity(0.1),
+          color:
+              disabled ? MayColors.surface : MayColors.accent.withOpacity(0.1),
           borderRadius: BorderRadius.circular(16),
         );
       case MayButtonVariant.text:
@@ -243,7 +246,8 @@ class _MayButtonState extends State<MayButton>
     return SizedBox(
       width: 18,
       height: 18,
-      child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation(Colors.white)),
+      child: CircularProgressIndicator(
+          strokeWidth: 2, valueColor: AlwaysStoppedAnimation(Colors.white)),
     );
   }
 

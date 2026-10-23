@@ -35,12 +35,15 @@ class MayListTile extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(MayRadius.s8),
       child: Padding(
-        padding: contentPadding ?? const EdgeInsets.symmetric(horizontal: MaySpacing.s20, vertical: MaySpacing.s12),
+        padding: contentPadding ??
+            const EdgeInsets.symmetric(
+                horizontal: MaySpacing.s20, vertical: MaySpacing.s12),
         child: Row(
           children: [
             if (leading != null) ...[
               leading!,
-              SizedBox(width: trailing != null ? MaySpacing.s16 : MaySpacing.s12),
+              SizedBox(
+                  width: trailing != null ? MaySpacing.s16 : MaySpacing.s12),
             ],
             Expanded(
               child: Column(
@@ -49,7 +52,9 @@ class MayListTile extends StatelessWidget {
                   Text(title, style: MayTypography.bodyLarge(context)),
                   if (subtitle != null) ...[
                     const SizedBox(height: 2),
-                    Text(subtitle!, style: MayTypography.bodySmall(context).copyWith(color: MayColors.secondary)),
+                    Text(subtitle!,
+                        style: MayTypography.bodySmall(context)
+                            .copyWith(color: MayColors.secondary)),
                   ],
                 ],
               ),

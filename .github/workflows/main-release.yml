@@ -80,7 +80,7 @@ jobs:
 
       - name: Format check (line-length 120)
         working-directory: apps/mobile
-        run: dart format --set-exit-code lib/ --line-length 120
+        run: dart format --set-exit-if-changed lib/ --line-length 120
 
       - name: Static analysis
         working-directory: apps/mobile
