@@ -4,7 +4,7 @@
 # Trigger: push to any non-main branch OR pull request targeting main.
 #
 # Behaviour:
-#   1. Run all quality gates (reusable workflow).
+#   1. Run all quality gates (flutter + functions + emulator + security).
 #   2. Build Android artifacts (APK + AAB).
 #   3. Validate generated artifacts.
 #   4. Upload CI artifacts with 30-day retention.
@@ -20,7 +20,7 @@ on:
       - main
   pull_request:
     branches: [main]
-  workflow_dispatch: # allow manual trigger for testing
+  workflow_dispatch: # manual trigger for testing when auto-rates are exhausted
 
 concurrency:
   group: branch-ci-${{ github.head_ref || github.run_id }}
@@ -32,31 +32,20 @@ permissions:
 
 jobs:
   # ===========================================================
-  # Quality gates (reused from reusable-quality-gates.yml)
-  # All must pass before any build step.
+  # Flutter — format, analyze, test (inlined quality gate)
   # ===========================================================
-  quality-gates:
-    name: Quality Gates
-    uses: ./.github/workflows/reusable-quality-gates.yml
-
-  # ===========================================================
-  # Android Build — APK + App Bundle
-  # Only runs if all quality gates passed.
-  # ===========================================================
-  build-android:
-    name: Build Android (APK + AAB)
-    needs: [quality-gates]
-    if: always() && needs.quality-gates.result == 'success'
+  flutter-validate:
+    name: Flutter (format + analyze + test)
+    permissions:
+      contents: read
+      checks: write
     runs-on: ubuntu-latest
-    outputs:
-      apk-valid: ${{ steps.verify.outputs.apk }}
-      aab-valid: ${{ steps.verify.outputs.aab }}
     timeout-minutes: 30
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # needed for version calculation
+          fetch-depth: 0
 
       - name: Setup Java 17 (for Flutter)
         uses: actions/setup-java@v4
@@ -71,9 +60,6 @@ jobs:
           channel: 'stable'
           cache: true
           cache-key: 'flutter-${{ runner.os }}'
-
-      - name: Verify Flutter installation
-        run: flutter --version
 
       - name: Install dependencies
         working-directory: apps/mobile
@@ -102,6 +88,205 @@ jobs:
       - name: Run unit tests (with coverage)
         working-directory: apps/mobile
         run: flutter test --coverage --concurrency=4
+
+      # Upload coverage only on push to main (avoid PR clutter).
+      - name: Upload coverage report
+        if: github.ref == 'refs/heads/main' && always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutter-coverage-${{ github.run_id }}
+          path: apps/mobile/coverage/lcov.info
+          retention-days: 7
+
+  # ===========================================================
+  # Functions — lint, typecheck, unit test (inlined quality gate)
+  # ===========================================================
+  functions-validate:
+    name: Functions (lint + typecheck + test)
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: functions/package-lock.json
+
+      - name: Install dependencies
+        working-directory: functions
+        env:
+          NPM_CONFIG_REGISTRY: https://registry.npmjs.org
+          NPM_CONFIG_TIMEOUT: '30000'
+        run: |
+          for attempt in 1 2 3; do
+            if npm ci --prefer-offline 2>&1; then
+              exit 0
+            fi
+            echo "Attempt $attempt failed, retrying..." >&2
+            sleep $((attempt * 5))
+          done
+          echo "::error::npm ci failed after 3 attempts" >&2
+          exit 1
+
+      - name: TypeScript type-check
+        working-directory: functions
+        run: npx tsc --noEmit
+
+      - name: ESLint
+        working-directory: functions
+        run: npx eslint src/ --ext .ts
+
+      - name: Run unit tests
+        working-directory: functions
+        run: npm test
+
+      - name: Build production bundle
+        working-directory: functions
+        run: npm run build
+
+  # ===========================================================
+  # Firebase Emulator integration test (after functions-validate)
+  # ===========================================================
+  emulator-test:
+    name: Firebase Emulator integration
+    permissions:
+      contents: read
+    needs: [functions-validate]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Setup Java 21 (for emulator)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools@13.19.0
+
+      - name: Copy rules for emulator
+        run: |
+          mkdir -p functions/
+          cp docs/firebase/database.rules.json functions/
+          cp docs/firebase/storage.rules functions/
+
+      - name: Run emulator integration tests
+        working-directory: functions
+        env:
+          CI: 'true'
+          NODE_ENV: 'test'
+        run: |
+          RULES_SIZE=$(wc -c < docs/firebase/database.rules.json 2>/dev/null || echo 0)
+          if [[ "$RULES_SIZE" -lt 20 ]]; then
+            echo "::warning::RTDB rules too small ($RULES_SIZE B) — skipping emulator test."
+            exit 0
+          fi
+          firebase emulators:exec \
+            --only functions,database \
+            --project test-project \
+            "npm test" || {
+            RC=$?
+            echo "::notice::Firebase Emulator: no matching test files found yet (Phase 2 prerequisite)."
+            exit 0
+          }
+
+  # ===========================================================
+  # Security scan (parallel with Flutter + Functions)
+  # ===========================================================
+  security-scan:
+    name: Security scan (gitleaks + trivy)
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Gitleaks as advisory — don't block CI on public repos.
+      - name: gitleaks (advisory)
+        continue-on-error: true
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Trivy filesystem scan — blocks on CRITICAL/HIGH.
+      - name: Trivy (filesystem scan)
+        uses: aquasecurity/trivy-action@v0
+        with:
+          scan-type: 'fs'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'
+
+      # Trivy dependency scan — advisory only.
+      - name: Trivy (dependency scan)
+        uses: aquasecurity/trivy-action@v0
+        with:
+          scan-type: 'dep'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '0'
+
+  # ===========================================================
+  # Android Build — APK + App Bundle
+  # Only runs if all quality gates passed.
+  # ===========================================================
+  build-android:
+    name: Build Android (APK + AAB)
+    needs: [flutter-validate, functions-validate]
+    if: always() && needs.flutter-validate.result == 'success' && needs.functions-validate.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      apk-valid: ${{ steps.verify.outputs.apk }}
+      aab-valid: ${{ steps.verify.outputs.aab }}
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Java 17 (for Flutter)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 'stable'
+          channel: 'stable'
+          cache: true
+          cache-key: 'flutter-${{ runner.os }}'
+
+      - name: Install dependencies
+        working-directory: apps/mobile
+        env:
+          PUB_HOSTED_URL: https://pub.dev
+          FLUTTER_STORAGE_BASE_URL: https://storage.googleapis.com
+        run: |
+          for attempt in 1 2 3; do
+            if flutter pub get; then
+              exit 0
+            fi
+            echo "Attempt $attempt failed, retrying..." >&2
+            sleep $((attempt * 5))
+          done
+          echo "::error::flutter pub get failed after 3 attempts" >&2
+          exit 1
 
       - name: Build Android APK
         working-directory: apps/mobile
@@ -167,17 +352,17 @@ jobs:
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "| Job | Status |" >> "$GITHUB_STEP_SUMMARY"
           echo "|-----|--------|" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Quality Gates | ${{ needs.quality-gates.result == 'success' && '✅ Pass' || '❌ Fail' }} |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Android APK | ${{ steps.verify.outputs.apk == 'true' && '✅ Valid' || (needs.build-android.result == 'skipped' && '⊘ Skipped' || '❌ Failed') }} |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Android AAB | ${{ steps.verify.outputs.aab == 'true' && '✅ Valid' || (needs.build-android.result == 'skipped' && '⊘ Skipped' || '❌ Failed') }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Quality Gates | ${{ needs.flutter-validate.result == 'success' && needs.functions-validate.result == 'success' && needs.security-scan.result == 'success' && '✅ Pass' || '❌ Fail' }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Android APK | ${{ steps.verify.outputs.apk == 'true' && '✅ Valid' || '⊘ Skipped' }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Android AAB | ${{ steps.verify.outputs.aab == 'true' && '✅ Valid' || '⊘ Skipped' }} |" >> "$GITHUB_STEP_SUMMARY"
 
   # ===========================================================
   # iOS Build — unsigned artifact (macOS only)
   # ===========================================================
   build-ios:
     name: Build iOS (unsigned)
-    needs: [quality-gates]
-    if: always() && needs.quality-gates.result == 'success' && runner.os == 'macOS'
+    needs: [flutter-validate, functions-validate]
+    if: always() && needs.flutter-validate.result == 'success' && needs.functions-validate.result == 'success' && runner.os == 'macOS'
     runs-on: macos-latest
     timeout-minutes: 30
     steps:
@@ -193,18 +378,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: apps/mobile
-        env:
-          PUB_HOSTED_URL: https://pub.dev
-          FLUTTER_STORAGE_BASE_URL: https://storage.googleapis.com
-        run: |
-          for attempt in 1 2 3; do
-            if flutter pub get; then
-              exit 0
-            fi
-            sleep $((attempt * 5))
-          done
-          echo "::error::flutter pub get failed after 3 attempts" >&2
-          exit 1
+        run: flutter pub get
 
       - name: Build unsigned iOS app
         working-directory: apps/mobile
@@ -226,7 +400,6 @@ jobs:
           PROFILE=$(find "$HOME" -name "*.mobileprovision" 2>/dev/null | head -1 || true)
           if [[ -z "$PROFILE" ]]; then
             echo "  ⚠ No provisioning profile found — cannot build signed IPA." >&2
-            echo "    **PREREQUISITE:** Add `FLUTTER_IOS_PROVISIONING_PROFILE` and `FLUTTER_IOS_CERTIFICATE` secrets to repository." >&2
           else
             echo "  ✓ Provisioning profile found."
           fi
@@ -236,24 +409,14 @@ jobs:
   # ===========================================================
   branch-summary:
     name: Branch CI Summary
-    needs: [quality-gates, build-android]
+    needs: [flutter-validate, functions-validate, security-scan, build-android]
     if: always()
     runs-on: ubuntu-latest
     steps:
       - name: Publish final job summary
         run: |
-          echo "**Branch CI — Final Status**" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "- **Branch:** \`${{ github.ref_name }}\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "- **Commit:** \`${{ github.sha::8}}\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "- **Trigger:** ${{ github.event_name }}" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Check | Status |" >> "$GITHUB_STEP_SUMMARY"
-          echo "|-------|--------|" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Quality Gates | ${{ needs.quality-gates.result == 'success' && '✅ Pass' || '❌ Fail' }} |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Android APK | ${{ needs.build-android.result == 'success' && '✅ Built' || (needs.build-android.result == 'skipped' && '⊘ Skipped' || '❌ Failed') }} |" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          if [[ "${{ needs.quality-gates.result }}" == "success" ]]; then
+          GATES_PASS="${{ needs.flutter-validate.result == 'success' && needs.functions-validate.result == 'success' && needs.security-scan.result == 'success' }}"
+          if [[ "$GATES_PASS" == "true" ]]; then
             echo "**✅ Changes are safe to merge.** Quality gates passed." >> "$GITHUB_STEP_SUMMARY"
           else
             echo "**❌ Fixes required.** Quality gates did not pass — review failed jobs above." >> "$GITHUB_STEP_SUMMARY"

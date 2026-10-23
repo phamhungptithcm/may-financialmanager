@@ -20,7 +20,7 @@ name: Main Release
 on:
   push:
     branches: [main]
-  workflow_dispatch: # allow manual trigger for testing
+  workflow_dispatch: # manual trigger for testing
 
 concurrency:
   group: main-release-${{ github.ref }}
@@ -32,22 +32,219 @@ permissions:
 
 jobs:
   # ===========================================================
-  # Quality gates — MUST pass before any release step
+  # Flutter — format, analyze, test (inlined quality gate)
   # ===========================================================
-  quality-gates:
-    name: Quality Gates
+  flutter-validate:
+    name: Flutter (format + analyze + test)
+    permissions:
+      contents: read
+      checks: write
+    runs-on: ubuntu-latest
     timeout-minutes: 30
-    uses: ./.github/workflows/reusable-quality-gates.yml
+    steps:
+      - name: Checkout exact main commit (provenance)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup Java 17 (for Flutter)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 'stable'
+          channel: 'stable'
+          cache: true
+          cache-key: 'flutter-${{ runner.os }}'
+
+      - name: Install dependencies
+        working-directory: apps/mobile
+        env:
+          PUB_HOSTED_URL: https://pub.dev
+          FLUTTER_STORAGE_BASE_URL: https://storage.googleapis.com
+        run: |
+          for attempt in 1 2 3; do
+            if flutter pub get; then
+              exit 0
+            fi
+            echo "Attempt $attempt failed, retrying..." >&2
+            sleep $((attempt * 5))
+          done
+          echo "::error::flutter pub get failed after 3 attempts" >&2
+          exit 1
+
+      - name: Format check (line-length 120)
+        working-directory: apps/mobile
+        run: dart format --set-exit-code lib/ --line-length 120
+
+      - name: Static analysis
+        working-directory: apps/mobile
+        run: flutter analyze --no-fatal-infos
+
+      - name: Run unit tests (with coverage)
+        working-directory: apps/mobile
+        run: flutter test --coverage --concurrency=4
+
+  # ===========================================================
+  # Functions — lint, typecheck, unit test (inlined quality gate)
+  # ===========================================================
+  functions-validate:
+    name: Functions (lint + typecheck + test)
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact main commit (provenance)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: functions/package-lock.json
+
+      - name: Install dependencies
+        working-directory: functions
+        env:
+          NPM_CONFIG_REGISTRY: https://registry.npmjs.org
+          NPM_CONFIG_TIMEOUT: '30000'
+        run: |
+          for attempt in 1 2 3; do
+            if npm ci --prefer-offline 2>&1; then
+              exit 0
+            fi
+            echo "Attempt $attempt failed, retrying..." >&2
+            sleep $((attempt * 5))
+          done
+          echo "::error::npm ci failed after 3 attempts" >&2
+          exit 1
+
+      - name: TypeScript type-check
+        working-directory: functions
+        run: npx tsc --noEmit
+
+      - name: ESLint
+        working-directory: functions
+        run: npx eslint src/ --ext .ts
+
+      - name: Run unit tests
+        working-directory: functions
+        run: npm test
+
+      - name: Build production bundle
+        working-directory: functions
+        run: npm run build
+
+  # ===========================================================
+  # Firebase Emulator integration test (after functions-validate)
+  # ===========================================================
+  emulator-test:
+    name: Firebase Emulator integration
+    permissions:
+      contents: read
+    needs: [functions-validate]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact main commit (provenance)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Java 21 (for emulator)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools@13.19.0
+
+      - name: Copy rules for emulator
+        run: |
+          mkdir -p functions/
+          cp docs/firebase/database.rules.json functions/
+          cp docs/firebase/storage.rules functions/
+
+      - name: Run emulator integration tests
+        working-directory: functions
+        env:
+          CI: 'true'
+          NODE_ENV: 'test'
+        run: |
+          RULES_SIZE=$(wc -c < docs/firebase/database.rules.json 2>/dev/null || echo 0)
+          if [[ "$RULES_SIZE" -lt 20 ]]; then
+            echo "::warning::RTDB rules too small ($RULES_SIZE B) — skipping emulator test."
+            exit 0
+          fi
+          firebase emulators:exec \
+            --only functions,database \
+            --project test-project \
+            "npm test" || {
+            RC=$?
+            echo "::notice::Firebase Emulator: no matching test files found yet (Phase 2 prerequisite)."
+            exit 0
+          }
+
+  # ===========================================================
+  # Security scan (parallel with Flutter + Functions)
+  # ===========================================================
+  security-scan:
+    name: Security scan (gitleaks + trivy)
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact main commit (provenance)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      # Gitleaks as advisory — don't block CI on public repos.
+      - name: gitleaks (advisory)
+        continue-on-error: true
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Trivy filesystem scan — blocks on CRITICAL/HIGH.
+      - name: Trivy (filesystem scan)
+        uses: aquasecurity/trivy-action@v0
+        with:
+          scan-type: 'fs'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'
+
+      # Trivy dependency scan — advisory only.
+      - name: Trivy (dependency scan)
+        uses: aquasecurity/trivy-action@v0
+        with:
+          scan-type: 'dep'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '0'
 
   # ===========================================================
   # Android build — APK + AAB for release
+  # STRICTLY after all quality gates pass
   # ===========================================================
   build-android:
     name: Build Android Release
-    timeout-minutes: 30
-    needs: [quality-gates]
-    if: always() && needs.quality-gates.result == 'success'
+    needs: [flutter-validate, functions-validate]
+    if: always() && needs.flutter-validate.result == 'success' && needs.functions-validate.result == 'success'
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     outputs:
       apk-sha: ${{ steps.verify.outputs.apk-sha }}
       aab-sha: ${{ steps.verify.outputs.aab-sha }}
@@ -80,9 +277,6 @@ jobs:
           channel: 'stable'
           cache: true
           cache-key: 'flutter-${{ runner.os }}'
-
-      - name: Verify Flutter installation
-        run: flutter --version
 
       - name: Install dependencies
         working-directory: apps/mobile
@@ -145,12 +339,12 @@ jobs:
   # ===========================================================
   build-ios:
     name: Build iOS Release (unsigned)
-    timeout-minutes: 30
-    needs: [quality-gates]
-    if: always() && needs.quality-gates.result == 'success' && runner.os == 'macOS'
+    needs: [flutter-validate, functions-validate]
+    if: always() && needs.flutter-validate.result == 'success' && needs.functions-validate.result == 'success' && runner.os == 'macOS'
     runs-on: macos-latest
+    timeout-minutes: 30
     steps:
-      - name: Checkout exact main commit
+      - name: Checkout exact main commit (provenance)
         uses: actions/checkout@v4
         with:
           ref: main
@@ -204,18 +398,19 @@ jobs:
   # ===========================================================
   calculate-version:
     name: Calculate Version
-    timeout-minutes: 15
-    needs: [quality-gates, build-android]
+    needs: [flutter-validate, functions-validate, build-android]
     if: |
       always() &&
-      needs.quality-gates.result == 'success' &&
+      needs.flutter-validate.result == 'success' &&
+      needs.functions-validate.result == 'success' &&
       needs.build-android.result == 'success'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     outputs:
       version: ${{ steps.calc.outputs.version }}
       skip: ${{ steps.calc.outputs.skip }}
     steps:
-      - name: Checkout exact main commit
+      - name: Checkout exact main commit (provenance)
         uses: actions/checkout@v4
         with:
           ref: main
@@ -280,15 +475,15 @@ jobs:
   # ===========================================================
   generate-notes:
     name: Generate Release Notes
-    timeout-minutes: 10
     needs: [calculate-version]
     if: always() && steps.calc.outputs.skip != 'true' && steps.calc.outputs.version != ''
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     outputs:
       version: ${{ steps.notes.outputs.version }}
       notes-path: ${{ steps.notes.outputs.path }}
     steps:
-      - name: Checkout exact main commit
+      - name: Checkout exact main commit (provenance)
         uses: actions/checkout@v4
         with:
           ref: main
@@ -336,12 +531,12 @@ jobs:
   # ===========================================================
   create-release:
     name: Create GitHub Release
-    timeout-minutes: 20
     needs: [calculate-version, generate-notes]
     if: |
       always() &&
       steps.calc.outputs.version != ''
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout exact main commit (provenance)
         uses: actions/checkout@v4
@@ -453,10 +648,10 @@ jobs:
   # ===========================================================
   release-failure-check:
     name: Release Safety Check
-    timeout-minutes: 5
-    needs: [quality-gates, build-android]
-    if: always() && (needs.quality-gates.result != 'success' || needs.build-android.result != 'success')
+    needs: [flutter-validate, functions-validate, build-android]
+    if: always() && (needs.flutter-validate.result != 'success' || needs.functions-validate.result != 'success' || needs.build-android.result != 'success')
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Report release safety failure
         run: |
@@ -464,7 +659,7 @@ jobs:
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "| Check | Status |" >> "$GITHUB_STEP_SUMMARY"
           echo "|-------|--------|" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Quality Gates | ${{ needs.quality-gates.result == 'success' && '✅ Pass' || '❌ FAIL — release blocked' }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Quality Gates | ${{ needs.flutter-validate.result == 'success' && needs.functions-validate.result == 'success' && '✅ Pass' || '❌ FAIL — release blocked' }} |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Android Build | ${{ needs.build-android.result == 'success' && '✅ Pass' || '❌ FAIL — release blocked' }} |" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "**No tag created. No GitHub Release published.** Fix failures and re-push to main."

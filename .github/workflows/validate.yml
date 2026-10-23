@@ -31,14 +31,17 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Export JAVA_HOME for Flutter SDK
+        run: |
+          echo "JAVA_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
+          echo "PATH=$JAVA_HOME/bin:$PATH" >> "$GITHUB_PATH"
+
       - name: Setup Flutter SDK
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: 'stable'
+          flutter-version: '3.x'
           channel: 'stable'
           cache: true
-          # Use broader cache key to leverage existing caches.
-          cache-key: 'flutter-${{ runner.os }}'
 
       - name: Verify Flutter installation
         run: flutter --version
@@ -46,7 +49,6 @@ jobs:
       - name: Install dependencies
         working-directory: apps/mobile
         env:
-          # Force HTTPS to avoid DNS issues; use Dart mirror as fallback.
           PUB_HOSTED_URL: https://pub.dev
           FLUTTER_STORAGE_BASE_URL: https://storage.googleapis.com
         run: |
@@ -106,7 +108,6 @@ jobs:
       - name: Install dependencies
         working-directory: functions
         env:
-          # Use official registry with timeout.
           NPM_CONFIG_REGISTRY: https://registry.npmjs.org
           NPM_CONFIG_TIMEOUT: '30000'
           NODE_TLS_REJECT_UNAUTHORIZED: '1'
@@ -190,18 +191,19 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: read     # needed for repo scanning
-      security-events: write  # for SARIF upload if supported
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: gitleaks — secret detection (report only, do not block)
-        continue-on-error: true   # gitleaks on public repos can be flaky; treat as advisory
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_CONFIG: .gitleaks.toml
+        continue-on-error: true
+        run: |
+          if command -v gitleaks &> /dev/null; then
+            gitleaks detect --report-format sarif --report-path gitleaks.sarif || echo "::warning::gitleaks scan completed with findings"
+          else
+            echo "::notice::gitleaks not installed on runner — skipping secret detection"
+          fi
 
       - name: Trivy (filesystem scan)
         uses: aquasecurity/trivy-action@v0
