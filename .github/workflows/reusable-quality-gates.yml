@@ -158,7 +158,7 @@ jobs:
             --only functions,database \
             --project "$FIREBASE_PROJECT" \
             "npm test" || {
-            local exit_code=$?
+            exit_code=$?
             # Distinguish "no tests found" from actual failure.
             if [ $exit_code -eq 1 ]; then
               echo "::notice::Firebase Emulator: no matching test files found yet."
