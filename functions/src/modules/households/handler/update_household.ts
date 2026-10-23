@@ -13,6 +13,7 @@ import { checkOwner } from '../../../core/authorization/household_auth.js';
 import { computeFingerprint, validateFingerprint } from '../../../core/idempotency/idempotency_service.js';
 import { createLogger } from '../../../core/logging/structured_logger.js';
 import { isEmulator, getRTDBURL } from '../../../core/database/index.js';
+import { getDatabase } from '../../../core/database/db_client.js';
 
 // -- Zod schemas --
 
@@ -62,8 +63,7 @@ async function rtdbGet(...segments: string[]): Promise<unknown | null> {
     const res = await fetch(`${baseUrl}${encoded}.json`);
     return res.status === 200 ? (await res.json()) : null;
   }
-  const db = (global as any).__may_rtdb_instance;
-  if (!db) throw new Error('RTDB not initialized in production');
+  const db = getDatabase();
   const snap = await db.ref(segments.join('/')).once('value');
   return snap.exists() ? snap.val() : null;
 }
@@ -79,8 +79,7 @@ async function rtdbSet(segments: string[], data: unknown): Promise<void> {
     });
     return;
   }
-  const db = (global as any).__may_rtdb_instance;
-  if (!db) throw new Error('RTDB not initialized in production');
+  const db = getDatabase();
   await db.ref(segments.join('/')).set(data);
 }
 
@@ -94,7 +93,12 @@ export const updateHousehold = onCall(
 
     // Auth guard — throws if unauthenticated.
     guardAuth(request);
-    const uid = request.auth!.uid;
+    const auth = request.auth;
+    if (!auth) {
+      logger.error('Invariant: guardAuth passed but auth is null');
+      throw new Error('Authentication unavailable');
+    }
+    const uid = auth.uid;
     const householdId = request.data?.householdId as string | undefined;
 
     if (!householdId) {
@@ -123,7 +127,7 @@ export const updateHousehold = onCall(
     const { householdId: validatedHid, name, timezone, currency, clientRequestId } = parsed;
 
     // RBAC: only OWNER can update household metadata.
-    const authError = await checkOwner({ uid, token: request.auth! }, validatedHid);
+    const authError = await checkOwner({ uid, token: auth }, validatedHid);
     if (authError) {
       return { status: 'error', code: authError.code, message: authError.message };
     }

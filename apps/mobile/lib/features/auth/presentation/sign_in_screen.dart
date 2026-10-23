@@ -134,17 +134,27 @@ class _SignInScreenState extends State<SignInScreen> {
                               ),
                               const SizedBox(height: MaySpacing.s8),
                             ],
-                            Flexible(
-                              child: Padding(
-                                padding: const EdgeInsets.only(top: MaySpacing.s8),
-                                child: MayText(
-                                  'Bằng cách đăng nhập, bạn đồng ý với Điều khoản dịch vụ và Chính sách bảo mật của chúng tôi.',
-                                  style: MayTypography.labelSmall(context, color: MayColors.secondary),
-                                  textAlign: TextAlign.center,
-                                  maxLines: 2,
+                              Flexible(
+                                child: Padding(
+                                  padding: const EdgeInsets.only(top: MaySpacing.s8),
+                                  child: MayText(
+                                    'Bằng cách đăng nhập, bạn đồng ý với',
+                                    style: MayTypography.labelSmall(context, color: MayColors.secondary),
+                                    textAlign: TextAlign.center,
+                                  ),
                                 ),
                               ),
-                            ),
+                              const SizedBox(height: MaySpacing.s2),
+                              Flexible(
+                                child: Padding(
+                                  padding: const EdgeInsets.only(bottom: MaySpacing.s8),
+                                  child: MayText(
+                                    'Điều khoản dịch vụ và Chính sách bảo mật.',
+                                    style: MayTypography.labelSmall(context, color: MayColors.secondary),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
                           ],
                         ),
                       ),

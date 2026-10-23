@@ -12,16 +12,22 @@ let _db: ReturnType<typeof admin.database> | null = null;
 export function getDatabase(): ReturnType<typeof admin.database> {
   if (_db) return _db;
 
-  const apps = (admin as any).apps ?? [];
+  const internal = admin as unknown as {
+    apps: admin.app.App[];
+    initializeApp(
+      options?: { databaseURL?: string },
+      name?: string,
+    ): admin.app.App;
+    database(): ReturnType<typeof admin.database>;
+  };
+  const apps = internal.apps ?? [];
   if (!apps.length) {
     const dbUrl = process.env.FIREBASE_DATABASE_EMULATOR_HOST;
     if (dbUrl) {
       const [host, port] = dbUrl.split(':');
-      (admin as any).initializeApp({
-        databaseURL: `http://${host}:${port}`,
-      });
+      internal.initializeApp({ databaseURL: `http://${host}:${port}` });
     } else {
-      (admin as any).initializeApp();
+      internal.initializeApp();
     }
   }
 
@@ -44,10 +50,16 @@ export function getRTDBURL(): string {
     return `http://${host}:${port}/`;
   }
 
-  const apps = (admin as any).apps ?? [];
+  const internal = admin as unknown as {
+    apps: admin.app.App[];
+    initializeApp(options?: { databaseURL?: string }): admin.app.App;
+    database(): ReturnType<typeof admin.database>;
+  };
+  const apps = internal.apps ?? [];
   if (apps.length > 0) {
-    const config = (apps[0] as any)?.options?.databaseURL;
-    if (config) return `${config}/`;
+    const options = (apps[0] as unknown as { options: { databaseURL?: string } })
+      ?.options?.databaseURL;
+    if (options) return `${options}/`;
   }
 
   return 'https://may-family-finance-default-rtdb.firebaseio.com/';
