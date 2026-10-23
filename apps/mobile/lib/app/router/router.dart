@@ -6,6 +6,12 @@
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:firebase_auth/firebase_auth.dart' as fb;
+
+// -- Feature imports (Phase 1) --
+
+import 'package:may/features/auth/presentation/sign_in_screen.dart' as auth;
+import 'package:may/features/onboarding/presentation/household_setup_screen.dart' as onboarding;
 
 // -- Route constants (from UI-XXX inventory) --
 
@@ -107,7 +113,15 @@ class MayRouter {
     BuildContext context,
     GoRouterState state,
   ) {
-    // MVP: check auth; full household+deep-link logic in Phase 1.
+    final isAuthenticated = fb.FirebaseAuth.instance.currentUser != null;
+    final isAuthPath = state.uri.toString().startsWith('/auth') ||
+        state.uri.toString().startsWith('/onboarding');
+
+    // Unauthenticated → always show auth screen
+    if (!isAuthenticated && !isAuthPath) {
+      return Routes.auth;
+    }
+
     return null; // no redirect in Phase 0 — screens implemented later
   }
 
@@ -122,6 +136,31 @@ class MayRouter {
         name: 'welcome',
         path: Routes.welcome,
         builder: (ctx, state) => const _StubScreen(routeName: 'Welcome (UI-01)'),
+      ),
+    );
+
+    // Auth / Onboarding
+    routes.add(
+      GoRoute(
+        name: 'auth',
+        path: Routes.auth,
+        builder: (ctx, state) => const auth.SignInScreen(),
+      ),
+    );
+
+    routes.add(
+      GoRoute(
+        name: 'onboardingHousehold',
+        path: Routes.onboardingHousehold,
+        builder: (ctx, state) => const onboarding.HouseholdSetupScreen(),
+      ),
+    );
+
+    routes.add(
+      GoRoute(
+        name: 'onboardingAccounts',
+        path: Routes.onboardingAccounts,
+        builder: (ctx, state) => const _StubScreen(routeName: 'Household Accounts (UI-04)'),
       ),
     );
 
