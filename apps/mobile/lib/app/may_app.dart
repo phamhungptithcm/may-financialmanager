@@ -11,11 +11,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:intl/package.dart' as intl;
-import 'package:may/app/router.dart';
 import 'package:may/app/config/environment.dart';
 import 'package:may/core/localization/app_localizations.dart';
-import 'package:may/shared/design_system/tokens/may_theme.dart';
 
 /// The top-level MyApp widget.
 ///
@@ -32,7 +29,7 @@ class MayApp extends ConsumerWidget {
       const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.dark,
-        systemNavigationBarColor: MayTheme.canvas,
+        systemNavigationBarColor: Colors.white,
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
     );
@@ -41,8 +38,11 @@ class MayApp extends ConsumerWidget {
       title: config.appName,
       debugShowCheckedModeBanner: false,
       // Theme — platform adaptive (Cupertino on iOS, Material on Android)
-      theme: MayTheme.light(),
-      darkTheme: MayTheme.dark(),
+      theme: ThemeData(
+        useMaterial3: true,
+        brightness: Brightness.light,
+      ),
+      darkTheme: ThemeData.dark(),
       themeMode: _preferredTheme(config),
       // Localization — vi-VN default per spec
       localizationsDelegates: const [
@@ -56,8 +56,10 @@ class MayApp extends ConsumerWidget {
         Locale('en', 'US'),
       ],
       locale: const Locale('vi', 'VN'),
-      // Router
-      routerConfig: MayRouter(initialAuthState: AuthState.pending).router,
+      // Router — go_router integration in Phase 1
+      home: Scaffold(
+        body: Center(child: const Text('Mây Family Finance')),
+      ),
     );
   }
 

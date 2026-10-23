@@ -5,6 +5,7 @@
 /// Invariant: NEVER accept floating-point money from user input.
 
 import 'package:flutter/material.dart';
+import 'package:may/shared/design_system/tokens/may_typography.dart';
 import 'package:flutter/services.dart';
 import 'package:may/core/domain/money.dart';
 import 'package:may/shared/widgets/may_text_field.dart';
@@ -57,7 +58,7 @@ class _MayMoneyFieldState extends State<MayMoneyField> {
   String _formatForInput(int minor) {
     final negative = minor < 0;
     final absMinor = minor.abs();
-    return '${negative ? '-' : }${absMinor.toString().replaceAllMapped(
+    return '${negative ? '-' : ''}${absMinor.toString().replaceAllMapped(
       RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
       (m) => '${m[1]},',
     )}';
@@ -79,7 +80,7 @@ class _MayMoneyFieldState extends State<MayMoneyField> {
     }
 
     // Prevent overflow for safe integer range.
-    if (parsed.abs() > 9_007_199_254_740_991) return; // near MAX_SAFE_INTEGER
+    if (parsed.abs() > 9007199254740991) return; // near MAX_SAFE_INTEGER
 
     final money = parsed == 0 ? null : Money(minor: parsed, currency: widget.currency);
     widget.onChanged(money);
@@ -94,7 +95,7 @@ class _MayMoneyFieldState extends State<MayMoneyField> {
       required: widget.required,
       controller: _controller,
       hintText: widget.hintText ?? '0',
-      keyboardType: TextInputType.numberWithOptions(significant: true),
+      keyboardType: TextInputType.number,
       inputFormatters: [
         FilteringTextInputFormatter.allow(RegExp(r'^-?\d{0,15}')), // 15 digit max
         NumericInputFormatter(),

@@ -33,7 +33,7 @@ class MayEmptyState extends StatelessWidget {
           children: [
             // Optional icon.
             if (icon != null) ...[
-              Icon(icon, size: 56, color: iconColor.withOpacity(0.5)),
+              Icon(icon, size: 56, color: iconColor?.withOpacity(0.5)),
               const SizedBox(height: 16),
             ],
 

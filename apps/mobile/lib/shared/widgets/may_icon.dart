@@ -4,7 +4,6 @@
 /// semantic label. No icon-only action without a tooltip/semantics label.
 
 import 'package:flutter/material.dart';
-import 'package:may/shared/design_system/tokens/may_colors.dart';
 
 class MayIcon extends StatelessWidget {
   final IconData icon;

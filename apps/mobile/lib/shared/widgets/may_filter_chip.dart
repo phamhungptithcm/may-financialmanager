@@ -3,6 +3,7 @@
 /// Multi-select chip with selected/normal states and accessible toggle.
 
 import 'package:flutter/material.dart';
+import 'package:may/shared/design_system/tokens/may_radius.dart';
 import 'package:may/shared/design_system/tokens/may_colors.dart';
 import 'package:may/shared/design_system/tokens/may_typography.dart';
 

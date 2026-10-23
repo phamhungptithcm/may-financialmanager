@@ -152,7 +152,7 @@ class _MayTextFieldState extends State<MayTextField> {
             widget.onTextChanged?.call(value);
           },
           onTap: () => setState(() => _hasFocus = true),
-          onUnfocus: () => setState(() => _hasFocus = false),
+          onTapOutside: (_) {},
         ),
 
         // Error text.

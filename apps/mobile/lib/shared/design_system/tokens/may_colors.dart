@@ -58,14 +58,14 @@ abstract final class MayColors {
 
   // -- State-aware wrappers (Material 3 compatible) --
 
-  /// Returns a [MaterialStateProperty] resolving to [accent] in all states.
-  static MaterialStateProperty<Color?> accentColor() =>
-      MaterialStatePropertyAll(accent);
+  /// Returns a [WidgetStateProperty] resolving to [accent] in all states.
+  static WidgetStateProperty<Color?> accentColor() =>
+      WidgetStatePropertyAll(accent);
 
-  /// Returns a [MaterialStateProperty] resolving to [danger] when pressed,
+  /// Returns a [WidgetStateProperty] resolving to [danger] when pressed,
   /// [disabled] when disabled, [primary] otherwise.
-  static MaterialStateProperty<Color?> primaryColor({Color? light}) =>
-      const _PrimaryColorState(light ?? primary);
+  static WidgetStateProperty<Color?> primaryColor({Color? light}) =>
+      _PrimaryColorState(light ?? primary);
 
   // -- Dark-mode overrides (approximate WCAG AA-safe) --
   // TODO: validate against prototype dark CSS after FigJam export review.
@@ -80,14 +80,14 @@ abstract final class MayColors {
   static const dangerDark = Color(0xFFE27B7B);
 }
 
-class _PrimaryColorState extends MaterialStateProperty<Color?> {
+class _PrimaryColorState extends WidgetStateProperty<Color?> {
   final Color defaultColor;
-  const _PrimaryColorState(this.defaultColor);
+  _PrimaryColorState(this.defaultColor);
 
   @override
-  Color? resolve(Set<MaterialState> states) {
-    if (states.contains(MaterialState.disabled)) return MayColors.disabled;
-    if (states.contains(MaterialState.pressed)) return MayColors.secondary;
+  Color? resolve(Set<WidgetState> states) {
+    if (states.contains(WidgetState.disabled)) return MayColors.disabled;
+    if (states.contains(WidgetState.pressed)) return MayColors.secondary;
     return defaultColor;
   }
 }

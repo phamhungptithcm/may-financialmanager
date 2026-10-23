@@ -148,7 +148,7 @@ final class Money {
       RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
       (m) => '${m[1]},',
     );
-    return '${negative ? '-' : }$str';
+    return '${negative ? '-$str' : str}';
   }
 
   // -- Parsing from formatted string --
@@ -206,8 +206,8 @@ final class Money {
     }
   }
 
-  static void _checkCurrency(Money other) {
-    if (currency.toUpperCase() != other.currency.toUpperCase()) {
+  void _checkCurrency(Money other) {
+    if (this.currency.toUpperCase() != other.currency.toUpperCase()) {
       throw ArgumentError(
         'Currency mismatch: $currency vs ${other.currency}',
       );

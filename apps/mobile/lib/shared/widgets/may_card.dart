@@ -4,7 +4,7 @@
 /// tap behaviour.
 
 import 'package:flutter/material.dart';
-import 'package:may/shared/design_system/tokens/may_colors.dart';
+import 'package:may/shared/design_system/tokens/may_spacing.dart';
 import 'package:may/shared/design_system/tokens/may_elevation.dart';
 import 'package:may/shared/design_system/tokens/may_motion.dart';
 import 'package:may/shared/design_system/tokens/may_radius.dart';

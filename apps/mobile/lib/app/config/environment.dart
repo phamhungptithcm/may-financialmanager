@@ -44,7 +44,7 @@ class AppConfig {
   // -- Feature flags (Phase 0 defaults) --
   bool get receiptCaptureEnabled => true;
   bool get investmentFeatures => false;  // Phase 3+
-  bool plusAvailable => true;
+  bool get plusAvailable => true;
 
   @override
   String toString() => 'AppConfig($environment, emulator=$emulatorMode)';

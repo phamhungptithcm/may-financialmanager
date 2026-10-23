@@ -35,7 +35,7 @@ class MayConfirmDialog extends StatelessWidget {
     required String title,
     required String description,
     MayConfirmType confirmType = MayConfirmType.info,
-    String? confirmLabel,
+    String confirmLabel = 'Xác nhận',
     String cancelLabel = 'Hủy',
     bool barrierDismissible = true,
   }) {
@@ -68,7 +68,7 @@ class MayConfirmDialog extends StatelessWidget {
       actions: [
         // Cancel button.
         MayButton.text(
-          label: cancelLabel,
+          label: cancelLabel ?? 'Hủy',
           onPressed: () => Navigator.of(context).pop(false),
         ),
 

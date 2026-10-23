@@ -4,7 +4,6 @@
 /// key set. All keys follow the pattern used in spec copywriting guide
 /// (Section "Copywriting guide" of specs/02_UI_UX.md).
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart' as intl;
 
@@ -107,7 +106,7 @@ class AppLocalizations {
       RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
       (m) => '${m[1]},',
     );
-    return '${negative ? '-' : }$str $currency';
+    return '${negative ? '-$str' : str} $currency';
   }
 
   // -- Date formatting (locale-aware) --
@@ -115,7 +114,7 @@ class AppLocalizations {
     if (locale.languageCode == 'vi') {
       return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
     }
-    return intl.IntlDateFormat('MM/dd/yyyy').format(date);
+    return intl.DateFormat('MM/dd/yyyy').format(date);
   }
 }
 

@@ -90,7 +90,7 @@ sealed class Result<T, F extends Failure> {
   bool get isError => this is Error<F>;
 
   /// Wraps [error] as an Error.
-  factory Result.error(F error) => Error(error);
+  factory Result.error(F error) => Error(error) as Result<T, F>;
 
   /// Wraps [value] as a Success.
   factory Result.success(T value) => Success(value);

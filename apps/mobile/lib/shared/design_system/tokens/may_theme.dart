@@ -8,15 +8,15 @@ import 'package:may/shared/design_system/tokens/may_colors.dart';
 
 /// App-wide theme token extension.
 extension MayThemeExtension on BuildContext {
-  MayThemeData get mayTheme => MayTheme.of(this);
+  MayThemeData get mayTheme => throw UnimplementedError('Use MayThemeExtension.of(context)');
 }
 
 /// Theme data combining all design tokens for a single theme variant.
 class MayThemeData {
-  final MayColors colors;
+  final MayColors? colors;
   final Brightness brightness;
 
-  const MayThemeData({required this.colors, required this.brightness});
+  const MayThemeData({this.colors, required this.brightness});
 
   bool get isDark => brightness == Brightness.dark;
 
@@ -61,8 +61,8 @@ class MayThemeData {
   Color get onAccent => const Color(0xFFFFFFFF);
 }
 
-/// Theme builder for light mode (approved prototype palette).
-ThemeData MayTheme.light() {
+  /// Light theme builder (approved prototype palette).
+ThemeData light() {
   return ThemeData(
     useMaterial3: true,
     brightness: Brightness.light,
@@ -134,8 +134,8 @@ ThemeData MayTheme.light() {
   );
 }
 
-/// Theme builder for dark mode (approximate inverse of light).
-ThemeData MayTheme.dark() {
+  /// Dark theme builder (approximate inverse of light).
+ThemeData dark() {
   return ThemeData(
     useMaterial3: true,
     brightness: Brightness.dark,
@@ -205,7 +205,7 @@ extension MayTheme on BuildContext {
   MayThemeData of(BuildContext context) {
     final theme = Theme.of(context);
     return MayThemeData(
-      colors: MayColors(),
+      colors: null,
       brightness: theme.brightness,
     );
   }

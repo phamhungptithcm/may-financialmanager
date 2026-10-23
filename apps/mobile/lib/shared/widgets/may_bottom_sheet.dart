@@ -3,9 +3,9 @@
 /// Modal bottom sheet with keyboard/safe-area awareness, title/body, and primary action.
 
 import 'package:flutter/material.dart';
+import 'package:may/shared/design_system/tokens/may_typography.dart';
 import 'package:may/shared/design_system/tokens/may_colors.dart';
-import 'package:may/shared/design_system/tokens/may_motion.dart';
-import 'package:may/shared/widgets/may_button.dart';
+import 'package:may/shared/design_system/tokens/may_spacing.dart';
 
 class MayBottomSheet extends StatelessWidget {
   final String title;
@@ -106,7 +106,7 @@ class MayBottomSheet extends StatelessWidget {
           ],
 
           // Safe area.
-          SafeArea(),
+          SafeArea(child: Container()),
         ],
       ),
     );

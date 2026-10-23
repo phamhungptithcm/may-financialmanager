@@ -27,8 +27,8 @@ abstract final class Routes {
   static const transactionsAdd = '/transactions/add';
   static const transactionsManual = '/transactions/manual';
   static const transactionsTransfer = '/transactions/transfer';
-  static const transactionDetail = (String id) => '/transactions/$id';
-  static const transactionCorrect = (String id) => '/transactions/$id/correct';
+  static String transactionDetail(String id) => '/transactions/$id';
+  static String transactionCorrect(String id) => '/transactions/$id/correct';
 
   // Receipts
   static const receiptsCamera = '/receipts/camera';
@@ -40,21 +40,21 @@ abstract final class Routes {
   // Analytics / Reports
   static const analytics = '/analytics';
   static const analyticsCategories = '/analytics/categories';
-  static const analyticsCategory = (String id) => '/analytics/category/$id';
+  static String analyticsCategory(String id) => '/analytics/category/$id';
 
   // Budgets
   static const budgets = '/budgets';
   static const budgetsNew = '/budgets/new';
-  static const budgetDetail = (String id) => '/budgets/$id';
+  static String budgetDetail(String id) => '/budgets/$id';
 
   // Accounts / Wealth
   static const accounts = '/accounts';
-  static const accountDetail = (String id) => '/accounts/$id';
+  static String accountDetail(String id) => '/accounts/$id';
   static const accountEdit = '/accounts/edit';
   static const wealth = '/wealth';
   static const assetEdit = '/assets/edit';
   static const investments = '/investments';
-  static const investmentDetail = (String id) => '/investments/$id';
+  static String investmentDetail(String id) => '/investments/$id';
   static const goals = '/goals';
   static const goalEdit = '/goals/edit';
 
@@ -80,7 +80,7 @@ abstract final class Routes {
 
   // Bills
   static const bills = '/bills';
-  static const billDetail = (String id) => '/bills/$id';
+  static String billDetail(String id) => '/bills/$id';
 }
 
 /// Auth state for route guards.
@@ -97,13 +97,13 @@ class MayRouter {
     : router = GoRouter(
         initialLocation: Routes.welcome,
         debugLogDiagnostics: true,
-        redirect: _redirect,
+        redirect: (context, state) => _redirect(context, state),
         routes: _routes(initialAuthState),
       );
 
   // -- Redirect logic (scaffold) --
 
-  static FutureOr<String?> _redirect(
+  static String? _redirect(
     BuildContext context,
     GoRouterState state,
   ) {
@@ -128,7 +128,7 @@ class MayRouter {
     // Main shell with 5-tab navigation (scaffold)
     routes.add(
       ShellRoute(
-        navigatorKey: GoNavigatorKey('main'),
+        navigatorKey: GlobalKey<NavigatorState>(),
         builder: (ctx, _, child) => _MainShell(child: child),
         routes: [
           GoRoute(

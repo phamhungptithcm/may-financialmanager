@@ -94,7 +94,7 @@ void main() {
 
     test('abs returns positive', () {
       final a = Money(minor: -100, currency: 'VND');
-      expect(a.abs(), equals(Money(minor: 100, currency: 'VND')));
+      expect(a.abs, equals(Money(minor: 100, currency: 'VND')));
     });
 
     test('copyWith creates new instance', () {

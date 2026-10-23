@@ -4,8 +4,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:may/shared/design_system/tokens/may_colors.dart';
+import 'package:may/shared/design_system/tokens/may_radius.dart';
+
 import 'package:may/shared/design_system/tokens/may_motion.dart';
-import 'package:may/shared/design_system/tokens/may_typography.dart';
 
 enum MayToastSeverity { info, success, warning, error }
 
@@ -16,7 +17,7 @@ class MayToast {
     required String message,
     MayToastSeverity severity = MayToastSeverity.info,
     Duration duration = MayMotion.toastDuration,
-  }) {
+  }) async {
     final bgColor = switch (severity) {
       MayToastSeverity.info => MayColors.accent,
       MayToastSeverity.success => MayColors.success,
@@ -24,7 +25,7 @@ class MayToast {
       MayToastSeverity.error => MayColors.danger,
     };
 
-    return ScaffoldMessenger.of(context).showSnackBar(
+    ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message, style: const TextStyle(color: Colors.white)),
         backgroundColor: bgColor,
@@ -34,5 +35,6 @@ class MayToast {
         // Accessibility: announces message via TalkBack/VoiceOver.
       ),
     );
+    return;
   }
 }

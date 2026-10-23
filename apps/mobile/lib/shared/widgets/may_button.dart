@@ -7,8 +7,6 @@
 import 'package:flutter/material.dart';
 import 'package:may/shared/design_system/tokens/may_colors.dart';
 import 'package:may/shared/design_system/tokens/may_motion.dart';
-import 'package:may/shared/design_system/tokens/may_radius.dart';
-import 'package:may/shared/design_system/tokens/may_typography.dart';
 
 /// Button variant controlling visual appearance.
 enum MayButtonVariant {
@@ -125,15 +123,15 @@ class _MayButtonState extends State<MayButton>
         final scale =
             (_pressed && !disabled) ? _scaleAnimation.value : 1.0;
 
-        return ScaleTransition(
+        return Transform.scale(
           scale: scale,
           child: Material(
             color: Colors.transparent,
-            borderRadius: MayRadius.s12.borderRadiusGeometry,
+            borderRadius: BorderRadius.circular(16),
             clipBehavior: Clip.antiAlias,
             child: InkWell(
               onTap: disabled ? null : _safeOnPressed,
-              borderRadius: MayRadius.s12.borderRadiusGeometry,
+              borderRadius: BorderRadius.circular(16),
               splashFactory: NoSplash.splashFactory, // Custom splash handled below
               child: Container(
                 constraints: BoxConstraints(
@@ -156,18 +154,18 @@ class _MayButtonState extends State<MayButton>
       case MayButtonVariant.primary:
         return BoxDecoration(
           color: disabled ? MayColors.disabled : MayColors.accent,
-          borderRadius: MayRadius.s12.borderRadiusGeometry,
+          borderRadius: BorderRadius.circular(16),
         );
       case MayButtonVariant.secondary:
         return BoxDecoration(
           color: disabled ? MayColors.surface : MayColors.canvas,
           border: Border.all(color: MayColors.accent, width: 1.5),
-          borderRadius: MayRadius.s12.borderRadiusGeometry,
+          borderRadius: BorderRadius.circular(16),
         );
       case MayButtonVariant.tertiary:
         return BoxDecoration(
           color: disabled ? MayColors.surface : MayColors.accent.withOpacity(0.1),
-          borderRadius: MayRadius.s12.borderRadiusGeometry,
+          borderRadius: BorderRadius.circular(16),
         );
       case MayButtonVariant.text:
         return const BoxDecoration();
