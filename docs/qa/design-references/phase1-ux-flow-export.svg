@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mây Family Finance — Phase 1 UX Flow Export (derived from spec topology) -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 480" width="1100" height="480">
+  <style>
+    .title { font-family: Arial, sans-serif; font-size: 16px; font-weight: bold; fill: #1a1a2e; }
+    .node { font-family: monospace; font-size: 13px; fill: #333; }
+    .edge { stroke: #4a90d9; stroke-width: 2; marker-end: url(#arrow); }
+    .label { font-family: Arial, sans-serif; font-size: 11px; fill: #666; }
+  </style>
+
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#4a90d9"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="20" y="30" class="title">Phase 1 — Auth + Household UX Flow</text>
+  <text x="20" y="50" class="label" fill="#999">Source: docs/Family Finance — End-to-end UX Flow.jam → Mây spec topology</text>
+
+  <!-- Nodes (left to right: top row = main flow, bottom row = error/alt) -->
+
+  <!-- Sign In Screen -->
+  <rect x="40" y="80" width="160" height="60" rx="8" fill="#e8f5e9" stroke="#4caf50"/>
+  <text x="55" y="107" class="node">SignInScreen</text>
+  <text x="55" y="123" class="label">(UI-02) Google / Apple auth</text>
+
+  <!-- Household Setup -->
+  <rect x="280" y="80" width="160" height="60" rx="8" fill="#e3f2fd" stroke="#2196f3"/>
+  <text x="295" y="107" class="node">HouseholdSetup</text>
+  <text x="295" y="123" class="label">(UI-03) name, currency, tz</text>
+
+  <!-- Shell -->
+  <rect x="520" y="80" width="160" height="60" rx="8" fill="#fff3e0" stroke="#ff9800"/>
+  <text x="535" y="107" class="node">AppShell</text>
+  <text x="535" y="123" class="label">(UI-05) Bottom nav tabs</text>
+
+  <!-- Home -->
+  <rect x="760" y="80" width="160" height="60" rx="8" fill="#f3e5f5" stroke="#9c27b0"/>
+  <text x="775" y="107" class="node">HomeScreen</text>
+  <text x="775" y="123" class="label">(UI-06) Transactions list</text>
+
+  <!-- Analytics -->
+  <rect x="760" y="180" width="160" height="60" rx="8" fill="#e0f2f1" stroke="#009688"/>
+  <text x="775" y="207" class="node">ReportsScreen</text>
+  <text x="775" y="223" class="label">(UI-07) Budget reports</text>
+
+  <!-- Wealth -->
+  <rect x="760" y="280" width="160" height="60" rx="8" fill="#fce4ec" stroke="#e91e63"/>
+  <text x="775" y="307" class="node">WealthScreen</text>
+  <text x="775" y="323" class="label">(UI-08) Net worth, assets</text>
+
+  <!-- Settings -->
+  <rect x="760" y="380" width="160" height="60" rx="8" fill="#efebe9" stroke="#795548"/>
+  <text x="775" y="407" class="node">SettingsScreen</text>
+  <text x="775" y="423" class="label">(UI-09) Profile, preferences</text>
+
+  <!-- Error/alt paths (bottom row) -->
+
+  <!-- Cancel Sign-In -->
+  <rect x="40" y="260" width="140" height="50" rx="8" fill="#fafafa" stroke="#bdbdbd"/>
+  <text x="55" y="290" class="node" fill="#999">Auth Cancelled</text>
+  <text x="55" y="305" class="label">(no-op) return to sign-in</text>
+
+  <!-- Duplicate Household -->
+  <rect x="40" y="360" width="180" height="50" rx="8" fill="#fafafa" stroke="#bdbdbd"/>
+  <text x="55" y="390" class="node" fill="#999">Already Has Household</text>
+  <text x="55" y="405" class="label">(BR-02) F01 returns existing hid</text>
+
+  <!-- Invites -->
+  <rect x="280" y="260" width="140" height="50" rx="8" fill="#fafafa" stroke="#bdbdbd"/>
+  <text x="295" y="290" class="node" fill="#999">Invite Member</text>
+  <text x="295" y="305" class="label">(F03) OWNER/ADMIN only</text>
+
+  <!-- Arrows: main flow -->
+  <line x1="200" y1="110" x2="275" y2="110" class="edge"/>
+  <text x="218" y="100" class="label">sign-in success</text>
+
+  <line x1="440" y1="110" x2="515" y2="110" class="edge"/>
+  <text x="450" y="100" class="label">create household (F01)</text>
+
+  <!-- Shell → tabs -->
+  <path d="M680,110 C720,110 720,110 755,110" class="edge"/>
+  <path d="M680,130 C720,130 720,130 755,130" class="edge"/>
+  <path d="M680,150 C720,150 720,150 755,150" class="edge"/>
+
+  <!-- Shell → Reports -->
+  <path d="M600,130 Q640,210 750,210" class="edge"/>
+
+  <!-- Shell → Wealth -->
+  <path d="M600,130 Q650,310 750,310" class="edge"/>
+
+  <!-- Shell → Settings -->
+  <path d="M600,130 Q680,410 750,410" class="edge"/>
+
+  <!-- Arrows: alt paths -->
+  <line x1="120" y1="140" x2="120" y2="255" class="edge" stroke="#e57373"/>
+  <text x="160" y="200" class="label" fill="#e57373">cancelled</text>
+
+  <line x1="120" y1="140" x2="120" y2="355" class="edge" stroke="#795548"/>
+  <text x="160" y="255" class="label" fill="#795548">BR-02</text>
+
+  <!-- Legend -->
+  <rect x="950" y="30" width="10" height="10" rx="2" fill="#e8f5e9" stroke="#4caf50"/>
+  <text x="965" y="40" class="label">Sign-in flow</text>
+
+  <rect x="950" y="50" width="10" height="10" rx="2" fill="#e3f2fd" stroke="#2196f3"/>
+  <text x="965" y="60" class="label">Household setup</text>
+
+  <rect x="950" y="70" width="10" height="10" rx="2" fill="#fff3e0" stroke="#ff9800"/>
+  <text x="965" y="80" class="label">App shell</text>
+
+  <rect x="950" y="90" width="10" height="10" rx="2" fill="#fafafa" stroke="#bdbdbd"/>
+  <text x="965" y="100" class="label">Error/alt path</text>
+
+  <line x1="950" y1="115" x2="970" y2="115" stroke="#4a90d9" stroke-width="2"/>
+  <text x="975" y="120" class="label">Main transition</text>
+
+  <line x1="950" y1="130" x2="970" y2="130" stroke="#e57373" stroke-width="2"/>
+  <text x="975" y="135" class="label">Alt path</text>
+
+  <!-- Footer -->
+  <text x="20" y="460" class="label" fill="#bbb">Phase 1 scope: TC-001 (createHousehold idempotent) | TC-002 (invite permissions) | TC-003 (access denial)</text>
+</svg>

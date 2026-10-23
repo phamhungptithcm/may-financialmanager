@@ -1,0 +1,11 @@
+{
+  "format": "flow-export-manifest-v1",
+  "source_path": "docs/Family Finance \u2014 End-to-end UX Flow.jam",
+  "source_sha256": "c479f35adf70cc1d5ee13d17715857a543ae7b5b7eb0ef09513290f65d0115fe",
+  "export_path": "docs/qa/design-references/phase1-ux-flow-export.svg",
+  "export_sha256": "3e2386db4e2841efd032c274791432987434ea03c39f015f860ade4097c893f2",
+  "export_type": "svg",
+  "review_status": "APPROVED",
+  "reviewer": "hunpeolabs (Phase 1 authorizer)",
+  "reviewed_at": "2026-10-23T02:45:00Z"
+}
