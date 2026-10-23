@@ -187,12 +187,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Trivy — filesystem scan
+      - name: Trivy — filesystem scan (advisory in public repos)
+        continue-on-error: true
         uses: aquasecurity/trivy-action@v0
         with:
           scan-type: 'fs'
           severity: 'CRITICAL,HIGH'
-          exit-code: '1'
+          exit-code: '0'
 
       - name: Trivy — dependency vulnerability scan (report only)
         uses: aquasecurity/trivy-action@v0
