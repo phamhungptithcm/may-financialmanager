@@ -33,7 +33,7 @@ void main() {
 
     test('format VND correctly', () {
       final money = Money(minor: 185000, currency: 'VND');
-      expect(money.format('vi_VN'), contains('185,000'));
+      expect(money.format('vi_VN'), contains('185.000')); // vi_VN uses '.' as thousands separator
     });
 
     test('format USD correctly', () {

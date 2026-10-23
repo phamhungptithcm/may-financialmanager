@@ -57,7 +57,15 @@ final class Money {
   // -- Accessors --
 
   /// The display (major) value as a double. Use sparingly — prefer [minor].
-  double get major => minor / _exponentFor(currency);
+  double get major => minor / pow10(_exponentFor(currency));
+
+  /// Returns 10^exp as an int (avoids dart:math.pow in getters).
+  static int pow10(int exp) {
+    // Exponents we support are small (0–6); a loop is fine and allocation-free.
+    int result = 1;
+    for (int i = 0; i < exp; i++) result *= 10;
+    return result;
+  }
 
   /// Whether the amount is zero.
   bool get isZero => minor == 0;
