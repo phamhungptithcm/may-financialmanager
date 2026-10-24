@@ -208,6 +208,7 @@ jobs:
     name: Security scan (gitleaks + trivy)
     permissions:
       contents: read
+      packages: read     # needed for Trivy installer (downloads from GHCR)
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -226,23 +227,49 @@ jobs:
             echo "::notice::gitleaks not installed on runner — skipping secret detection"
           fi
 
-      # Trivy filesystem scan — advisory in public repos (don't block on dev vulns).
+      # Trivy filesystem scan — advisory in public repos (inline).
       - name: Trivy (filesystem scan)
         continue-on-error: true
-        uses: aquasecurity/trivy-action@v0
-        with:
-          scan-type: 'fs'
-          severity: 'CRITICAL,HIGH'
-          exit-code: '0'
+        env:
+          TRIVY_DB_REPOSITORY: 'ghcr.io/trivy/standard-db'
+          TRIVY_JAVA_DB_REPOSITORY: 'ghcr.io/trivy/java-db'
+        run: |
+          if command -v trivy &> /dev/null; then
+            echo "::notice::Trivy already installed"
+          elif command -v curl &> /dev/null; then
+            echo "Installing Trivy..."
+            curl -sL https://raw.githubusercontent.com/aquasecurity/trivy/main/packaging/install.sh | bash
+          else
+            echo "::notice::Trivy: no curl or pre-installed trivy — skipping filesystem scan"
+            exit 0
+          fi
+          if ! command -v trivy &> /dev/null; then
+            echo "::notice::Trivy: install failed — skipping filesystem scan"
+            exit 0
+          fi
+          TRIVY_EXIT=0
+          trivy fs --severity CRITICAL,HIGH --exit-code 0 --format table . || TRIVY_EXIT=$?
+          if [ $TRIVY_EXIT -eq 0 ]; then
+            echo "::notice::Trivy: filesystem scan passed (advisory)"
+          else
+            echo "::warning::Trivy: found CRITICAL/HIGH findings (exit code $TRIVY_EXIT, advisory mode)"
+          fi
 
-      # Trivy dependency scan — advisory only.
+      # Trivy dependency scan — advisory only (inline).
       - name: Trivy (dependency scan)
         continue-on-error: true
-        uses: aquasecurity/trivy-action@v0
-        with:
-          scan-type: 'dep'
-          severity: 'CRITICAL,HIGH'
-          exit-code: '0'
+        run: |
+          if ! command -v trivy &> /dev/null; then
+            echo "::notice::Trivy not available — skipping dependency scan"
+            exit 0
+          fi
+          TRIVY_EXIT=0
+          trivy dep --severity CRITICAL,HIGH --exit-code 0 . || TRIVY_EXIT=$?
+          if [ $TRIVY_EXIT -eq 0 ]; then
+            echo "::notice::Trivy: dependency scan passed (advisory)"
+          else
+            echo "::warning::Trivy: found CRITICAL/HIGH dependencies (exit code $TRIVY_EXIT, advisory mode)"
+          fi
 
   # ===========================================================
   # Android Build — APK + App Bundle

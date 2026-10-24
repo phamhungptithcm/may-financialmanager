@@ -175,6 +175,7 @@ jobs:
     name: Security scan (gitleaks + trivy)
     permissions:
       contents: read
+      packages: read     # needed for trivy-action to download binary from GHCR
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source
