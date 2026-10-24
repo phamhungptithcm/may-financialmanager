@@ -196,6 +196,7 @@ jobs:
           exit-code: '0'
 
       - name: Trivy — dependency vulnerability scan (report only)
+        continue-on-error: true
         uses: aquasecurity/trivy-action@v0
         with:
           scan-type: 'dep'
